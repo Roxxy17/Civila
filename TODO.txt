@@ -1,0 +1,30 @@
+TODO: Add any other environment variables as needed for your application.
+
+Buat koneksi MongoDB di kode:
+
+Buat helper file untuk koneksi, misal lib/mongodb.ts.
+Setup NextAuth untuk autentikasi dan session:
+
+Buat file [...nextauth].ts di folder pages/api/auth/.
+Buat API endpoint untuk CRUD data (jika perlu):
+
+Buat file di pages/api/ untuk operasi database.
+Integrasi frontend dengan API dan session:
+
+Panggil API dari komponen React/Next.js.
+Gunakan hook NextAuth (useSession) untuk session.
+Jika ingin contoh kode untuk salah satu langkah di atas, silakan pilih!2. Buat koneksi MongoDB di kode:
+
+Buat helper file untuk koneksi, misal lib/mongodb.ts.
+Setup NextAuth untuk autentikasi dan session:
+
+Buat file [...nextauth].ts di folder pages/api/auth/.
+Buat API endpoint untuk CRUD data (jika perlu):
+
+Buat file di pages/api/ untuk operasi database.
+Integrasi frontend dengan API dan session:
+
+Panggil API dari komponen React/Next.js.
+Gunakan hook NextAuth (useSession) untuk session.
+Jika ingin contoh kode untuk salah satu langkah di atas, silakan pilih!
+
