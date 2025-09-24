@@ -438,3 +438,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+@font-face {
+  font-family: 'Geist Sans';
+  src: url('/fonts/Geist/webfonts/Geist-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono/webfonts/GeistMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Gunakan font di body atau class */
+body {
+  font-family: 'Geist Sans', Arial, sans-serif;
+}
+.code {
+  font-family: 'Geist Mono', monospace;
+}
