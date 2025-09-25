@@ -12,7 +12,7 @@ interface FloatingCardProps {
 export function FloatingCard({ children, className, delay = 0 }: FloatingCardProps) {
   return (
     <div
-      className={cn("floating-card glass rounded-xl p-6 shadow-2xl", className)}
+      className={cn("floating-card rounded-xl p-6 shadow-2xl", className)}
       style={{ animationDelay: `${delay}s` }}
     >
       {children}
