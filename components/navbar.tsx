@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Menu, X } from "lucide-react"
@@ -8,24 +10,32 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 interface SiteHeaderProps {
   currentPage: string
-  onNavigate: (page: string) => void
+  onNavigate?: (page: string) => void
 }
 
 export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isScrolled, setIsScrolled] = useState(false)
+  const router = useRouter()
 
   const navigationItems = [
     { id: "home", label: "Home" },
-    { id: "about", label: "About" },
     { id: "features", label: "Features" },
+    { id: "pricing", label: "Pricing" },
+    { id: "about", label: "About" },
     { id: "contact", label: "Contact" },
-    { id: "dashboard", label: "Dashboard" },
   ]
 
   const handleNavigation = (page: string) => {
-    onNavigate(page)
+    // safe-call onNavigate when provided, otherwise fallback to router
+    if (typeof onNavigate === "function") {
+      onNavigate(page)
+    } else {
+      // fallback routing: map page id to a path
+      const path = page === "home" ? "/" : `/${page}`
+      router.push(path)
+    }
     setIsMenuOpen(false)
   }
 
@@ -39,11 +49,10 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
 
   return (
     <header
-      className={`fixed top-5 left-5 right-5 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-background/55 backdrop-blur-md border-r border-white/30 shadow-[0_8px_10px_0_rgba(31,38,135,0.37)] rounded-3xl"
-          : "bg-transparent border-none shadow-none rounded-none"
-      }`}
+      className={`fixed top-5 left-5 right-5 z-50 transition-all duration-300 ${isScrolled
+        ? "bg-background/55 backdrop-blur-md border-r border-white/30 shadow-[0_8px_10px_0_rgba(31,38,135,0.37)] rounded-3xl"
+        : "bg-transparent border-none shadow-none rounded-none"
+        }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -53,31 +62,30 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
             onClick={() => handleNavigation("home")}
           >
             <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <img src="/orbit.png" />
+              <img src="/civilalogo.png" />
             </div>
-            <img src="/debriseye.png" className="w-[120px]" />
+            <img src="/civilafontLM.png" className="w-[100px]" />
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navigationItems.map((item) => (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => handleNavigation(item.id)}
-                className={`text-md transition-colors hover:text-primary ${
-                  currentPage === item.id
-                    ? "text-primary font-bold"
-                    : "text-muted-foreground font-medium"
-                }`}
+                href={item.id === "home" ? "/" : `/${item.id}`}
+                className={`text-md transition-colors hover:text-primary ${currentPage === item.id
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground font-medium"
+                  }`}
               >
                 {item.label}
-              </button>
+              </Link>
             ))}
           </nav>
 
           {/* Search Bar */}
           <div className="hidden lg:flex items-center space-x-4">
-            <div className="relative">
+            {/* <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 type="text"
@@ -86,8 +94,16 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-50 bg-muted-foreground/10"
               />
-            </div>
+            </div> */}
             <ThemeToggle />
+          </div>
+          <div className="flex items-center space-x-4 ml-4">
+            <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
+              Masuk
+            </Link>
+            <Button asChild className="pulse-glow btn-hover-lift">
+              <Link href="/register">Mulai Gratis</Link>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -106,17 +122,17 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-3">
               {navigationItems.map((item) => (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => handleNavigation(item.id)}
-                  className={`text-left px-2 py-2 text-sm font-medium transition-colors hover:text-primary ${
-                    currentPage === item.id
+                  href={item.id === "home" ? "/" : `/${item.id}`}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`text-left px-2 py-2 text-sm font-medium transition-colors hover:text-primary ${currentPage === item.id
                       ? "text-primary bg-muted/50 rounded-md"
                       : "text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {item.label}
-                </button>
+                </Link>
               ))}
               <div className="pt-3 border-t border-border">
                 <div className="relative">
