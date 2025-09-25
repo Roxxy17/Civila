@@ -1,3 +1,5 @@
+"use client"
+
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { FloatingCard } from "@/components/floating-card"
@@ -33,7 +35,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-export default function FeaturesPage() {
+export function FeaturesPage() {
+  
   const coreFeatures = [
     {
       icon: Brain,
@@ -438,4 +441,8 @@ export default function FeaturesPage() {
       <Footer />
     </div>
   )
+}
+
+export default function Page() {
+  return <FeaturesPage />
 }
