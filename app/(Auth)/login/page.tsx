@@ -13,6 +13,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { LoginSuccessModal } from "@/components/login-success-modal"
 import { EventInfoCard } from "@/components/EventInfoCard"
+import { signIn } from "next-auth/react"
 
 const messages = [
   {
@@ -74,22 +75,17 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    const userData = JSON.parse(localStorage.getItem("user") || "{}")
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        ...userData,
-        email: formData.email,
-        isAuthenticated: true,
-      }),
-    )
-
+    const res = await signIn("credentials", {
+      redirect: false,
+      email: formData.email,
+      password: formData.password,
+    })
     setIsLoading(false)
-    setShowSuccessModal(true)
+    if (res?.ok) {
+      router.push("/")
+    } else {
+      alert("Login gagal")
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Menu, X } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useSession, signOut } from "next-auth/react"
 
 interface SiteHeaderProps {
   currentPage: string
@@ -18,6 +19,7 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isScrolled, setIsScrolled] = useState(false)
   const router = useRouter()
+  const { data: session, status } = useSession()
 
   const navigationItems = [
     { id: "home", label: "Home" },
@@ -85,25 +87,31 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
 
           {/* Search Bar */}
           <div className="hidden lg:flex items-center space-x-4">
-            {/* <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search debris data..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-50 bg-muted-foreground/10"
-              />
-            </div> */}
             <ThemeToggle />
           </div>
           <div className="flex items-center space-x-4 ml-4">
-            <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
-              Masuk
-            </Link>
-            <Button asChild className="pulse-glow btn-hover-lift">
-              <Link href="/register">Mulai Gratis</Link>
-            </Button>
+            {session?.user ? (
+              <>
+                <span className="text-muted-foreground font-semibold">
+                  {session.user.name || session.user.email}
+                </span>
+                <Button
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className="pulse-glow btn-hover-lift"
+                >
+                  Keluar
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Masuk
+                </Link>
+                <Button asChild className="pulse-glow btn-hover-lift">
+                  <Link href="/register">Mulai Gratis</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
