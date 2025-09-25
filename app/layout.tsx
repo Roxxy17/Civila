@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import { AnimatedBackground } from "@/components/animated-background"
+import { SessionProviderWrapper } from "@/components/SessionProviderWrapper"
 
 export const metadata = {
   title: "Civila - AI-Powered Career Guidance Platform",
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en" className="antialiased">
       <body className="bg-background text-foreground min-h-screen">
         <AnimatedBackground />
-        <div className="relative z-10">{children}</div>
+        <SessionProviderWrapper>
+          <div className="relative z-10">{children}</div>
+        </SessionProviderWrapper>
       </body>
     </html>
   )

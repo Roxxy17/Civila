@@ -28,20 +28,22 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
+    const res = await fetch("/api/auth/Register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         name: formData.name,
         email: formData.email,
-        isAuthenticated: true,
-        hasProfile: false,
+        password: formData.password,
       }),
-    )
-
+    })
+    const data = await res.json()
     setIsLoading(false)
-    router.push("/login?registered=true")
+    if (res.ok) {
+      router.push("/login?registered=true")
+    } else {
+      alert(data.error)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
