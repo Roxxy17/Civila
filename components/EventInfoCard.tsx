@@ -92,7 +92,7 @@ export function EventInfoCard({
         {/* Left info panel */}
         <div className="w-1/2 h-full rounded-2xl bg-gradient-to-br backdrop-blur-xl bg-card-foreground border-r border-white/30 p-6 flex flex-col justify-between">
           <div>
-            <h2 className="text-5xl font-normal text-secondary">
+            <h2 className="text-5xl font-normal text-foreground">
               {dateInfo.day}
             </h2>
             <h2 className="text-5xl font-normal text-secondary-foreground">
