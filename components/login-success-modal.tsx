@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { FloatingCard } from "@/components/floating-card"
 import { GradientText } from "@/components/gradient-text"
@@ -15,6 +16,7 @@ interface LoginSuccessModalProps {
 export function LoginSuccessModal({ isOpen, onClose }: LoginSuccessModalProps) {
   const [isClosing, setIsClosing] = useState(false)
   const router = useRouter()
+  const { theme } = useTheme()
 
   if (!isOpen) return null
 
@@ -28,7 +30,7 @@ export function LoginSuccessModal({ isOpen, onClose }: LoginSuccessModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-card-foreground backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div
@@ -36,25 +38,22 @@ export function LoginSuccessModal({ isOpen, onClose }: LoginSuccessModalProps) {
           isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
       >
-        <FloatingCard className="relative">
+        <FloatingCard className="relative bg-card">
           <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
 
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 pulse-glow">
-              <CheckCircle className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">
-              <GradientText>Login Berhasil!</GradientText>
+            <h2 className="text-3xl font-normal text-primary mb-2">
+              Login Successful!
             </h2>
-            <p className="text-muted-foreground">Selamat datang kembali! Pilih langkah selanjutnya:</p>
+            <p className="text-secondary-foreground">Welcome back! Select your next step:</p>
           </div>
 
           <div className="space-y-4">
             <Button
               onClick={() => handleChoice("/dashboard")}
-              className="w-full justify-start text-left h-auto p-4"
+              className="w-full justify-start text-left h-auto p-4 rounded-3xl"
               variant="outline"
             >
               <div className="flex items-center space-x-4">
@@ -62,15 +61,15 @@ export function LoginSuccessModal({ isOpen, onClose }: LoginSuccessModalProps) {
                   <LayoutDashboard className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold">Ke Dashboard</div>
-                  <div className="text-sm text-muted-foreground">Lihat progress dan rekomendasi karier</div>
+                  <div className="font-semibold text-secondary hover:text-background">Ke Dashboard</div>
+                  <div className="text-sm text-secondary hover:text-background">Lihat progress dan rekomendasi karier</div>
                 </div>
               </div>
             </Button>
 
             <Button
               onClick={() => handleChoice("/profile/setup")}
-              className="w-full justify-start text-left h-auto p-4"
+              className="w-full justify-start text-left h-auto p-4 rounded-3xl"
               variant="outline"
             >
               <div className="flex items-center space-x-4">
