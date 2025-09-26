@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
 interface AuthGuardProps {
@@ -11,39 +10,11 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { data: session, status } = useSession()
   const router = useRouter()
 
-  useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const userData = localStorage.getItem("user")
-        if (userData) {
-          const user = JSON.parse(userData)
-          setIsAuthenticated(user.isAuthenticated || false)
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error)
-        setIsAuthenticated(false)
-      }
-      setIsLoading(false)
-    }
-
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (requireAuth && !isAuthenticated) {
-        router.push("/login")
-      } else if (!requireAuth && isAuthenticated) {
-        router.push("/dashboard")
-      }
-    }
-  }, [isLoading, isAuthenticated, requireAuth, router])
-
-  if (isLoading) {
+  // Loading state
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -51,11 +22,15 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     )
   }
 
-  if (requireAuth && !isAuthenticated) {
+  // Jika halaman butuh auth dan user belum login, redirect ke login
+  if (requireAuth && !session?.user) {
+    router.push("/login")
     return null
   }
 
-  if (!requireAuth && isAuthenticated) {
+  // Jika halaman tidak butuh auth dan user sudah login, redirect ke dashboard
+  if (!requireAuth && session?.user) {
+    router.push("/dashboard")
     return null
   }
 
