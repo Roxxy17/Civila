@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { FloatingCard } from "@/components/floating-card"
 import { GradientText } from "@/components/gradient-text"
@@ -7,8 +9,19 @@ import { ScrollToTop } from "@/components/scroll-to-top"
 import { AIPromptGenerator } from "@/components/ai-prompt-generator"
 import { ArrowRight, Brain, Target, TrendingUp, Users, Zap, Star } from "lucide-react"
 import Link from "next/link"
+import { useEffect } from "react"
+import { useSession } from "next-auth/react"
 
 export default function HomePage() {
+
+    const { data: session, status } = useSession()
+
+  useEffect(() => {
+  console.log("Session:", session)
+  console.log("Status:", status)
+}, [session, status])
+
+
   return (
     <div className="min-h-screen page-transition">
       <Navbar isAuthenticated={false} />

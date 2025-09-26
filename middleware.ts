@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const protectedRoutes = ["/dashboard", "/profile", "/after-login"] // tambahkan route yang memang harus login
+const protectedRoutes = ["/dashboard", "/profile", "/gamification" , "/learning-path" , "/portofolio" , "/progress" , "/career-mapper"] // tambahkan route yang memang harus login
 
 export async function middleware(req) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })

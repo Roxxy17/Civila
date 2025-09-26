@@ -82,7 +82,7 @@ export default function LoginPage() {
     })
     setIsLoading(false)
     if (res?.ok) {
-      router.push("/")
+      router.push("/dashboard")
     } else {
       alert("Login gagal")
     }

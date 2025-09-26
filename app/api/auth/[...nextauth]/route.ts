@@ -4,6 +4,7 @@ import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb-client";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
+import connectDB from "@/lib/mongodb";
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -15,18 +16,23 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const user = await User.findOne({ email: credentials.email });
-        if (!user) {
-          console.log("User not found:", credentials.email);
+        try {
+          await connectDB(); // <--- WAJIB dipanggil sebelum query!
+          console.log("Authorize input:", credentials);
+          const user = await User.findOne({ email: credentials.email });
+          if (!user) {
+            console.log("User not found:", credentials.email);
+            return null;
+          }
+          console.log("User found:", user);
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          console.log("Password valid:", isValid);
+          if (!isValid) return null;
+          return { id: user._id, name: user.name, email: user.email };
+        } catch (err) {
+          console.error("Authorize error:", err);
           return null;
         }
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-        console.log("Password valid:", isValid);
-        if (!isValid) return null;
-        return { id: user._id, name: user.name, email: user.email };
       },
     }),
   ],
