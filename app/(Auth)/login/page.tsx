@@ -62,6 +62,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [registrationSuccess, setRegistrationSuccess] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
   const { theme } = useTheme()
@@ -75,6 +76,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setErrorMessage("")
     const res = await signIn("credentials", {
       redirect: false,
       email: formData.email,
@@ -82,10 +84,20 @@ export default function LoginPage() {
     })
     setIsLoading(false)
     if (res?.ok) {
-      router.push("/dashboard")
+      setShowSuccessModal(true)
     } else {
-      alert("Login gagal")
+      setErrorMessage("Email atau password salah!")
     }
+  }
+
+  const handleGoToDashboard = () => {
+    setShowSuccessModal(false)
+    router.push("/dashboard")
+  }
+
+  const handleGoToProfile = () => {
+    setShowSuccessModal(false)
+    router.push("/profile/setup")
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,6 +188,10 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              {errorMessage && (
+                <p className="text-red-500 text-sm mt-2">{errorMessage}</p>
+              )}
+
               <p className="text-xs text-secondary-foreground">Please consume responsibly.</p>
 
               <Button type="submit" className="w-full mt-2 rounded-full h-10 text-lg" size="lg" disabled={isLoading}>
@@ -208,7 +224,12 @@ export default function LoginPage() {
         />
       </div>
 
-      <LoginSuccessModal isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)} />
+      <LoginSuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        onDashboard={handleGoToDashboard}
+        onProfile={handleGoToProfile}
+      />
     </div>
   )
 }
