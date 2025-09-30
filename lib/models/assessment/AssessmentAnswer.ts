@@ -1,19 +1,30 @@
 import mongoose, { Schema, Document } from "mongoose"
 
+export interface IAnswer {
+  questionIndex: number; // index soal di array questions
+  answer: string;        // jawaban user (misal "A", "B", dst)
+  isCorrect?: boolean;
+}
+
 export interface IAssessmentAnswer extends Document {
   user: mongoose.Types.ObjectId;
-  question: mongoose.Types.ObjectId;
-  answer: string;
-  isCorrect?: boolean;
+  answers: IAnswer[];
   createdAt?: Date;
 }
+
+const AnswerSchema = new Schema<IAnswer>(
+  {
+    questionIndex: { type: Number, required: true },
+    answer: { type: String, required: true },
+    isCorrect: { type: Boolean },
+  },
+  { _id: false }
+);
 
 const AssessmentAnswerSchema = new Schema<IAssessmentAnswer>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    question: { type: Schema.Types.ObjectId, ref: "AssessmentQuestion" },
-    answer: { type: String },
-    isCorrect: { type: Boolean },
+    answers: [AnswerSchema],
   },
   { timestamps: true }
 );

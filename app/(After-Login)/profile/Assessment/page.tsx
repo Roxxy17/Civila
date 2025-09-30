@@ -45,17 +45,41 @@ export default function AssessmentPage() {
     setSelectedAnswer(answerIndex)
   }
 
-  const handleNext = () => {
+  const handleSubmitAnswers = async (answersToSubmit: number[]) => {
+    const payload = {
+      answers: answersToSubmit.map((answerIndex, i) => ({
+        questionIndex: i,
+        answer: ["A", "B", "C", "D"][answerIndex]
+      }))
+    }
+
+    try {
+      await fetch("/api/Assesment/Answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+    } catch (err) {
+      // Optional: handle error
+    }
+  }
+
+  // Panggil fungsi ini setelah setIsCompleted(true) di handleNext
+  const handleNext = async () => {
     if (selectedAnswer !== null) {
       const newAnswers = [...answers]
       newAnswers[currentQuestion] = selectedAnswer
+
       setAnswers(newAnswers)
       setSelectedAnswer(null)
+
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1)
       } else {
+        // Pastikan jawaban terakhir sudah masuk ke array
         setIsCompleted(true)
         setSubmitting(true)
+        await handleSubmitAnswers(newAnswers) // Kirim newAnswers, bukan answers lama!
         setTimeout(() => {
           setSubmitting(false)
         }, 2000)
