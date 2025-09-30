@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { AuthGuard } from "@/components/auth-guard"
 import { FloatingCard } from "@/components/floating-card"
@@ -11,84 +10,137 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Brain, Upload, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"
+import { Brain, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { SkillAssessmentModal } from "@/components/skill-assessment-modal"
+import { useSession } from "next-auth/react"
+import AssessmentPage from "../Assessment/page"
+
+const careerCategories = [
+  "Tecnologia & IT",
+  "Design & Kreatif",
+  "Bisnis & Manajemen",
+  "Marketing & Sales",
+  "Keuangan & Akuntansi",
+  "Kesehatan & Medis",
+  "Pendidikan & Pelatihan",
+  "Teknik & Engineering",
+  "Lainnya",
+]
 
 export default function ProfileSetupPage() {
+  const { data: session } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     name: "",
     age: "",
-    workInterest: "",
-    skills: "",
-    cv: null as File | null,
+    background: "",
+    targetCareer: "",
+    interests: "",
+    currentSkills: "",
+    uploadedCV: "", // berisi isi CV
   })
+  const [extractingPdf, setExtractingPdf] = useState(false)
   const [showAssessment, setShowAssessment] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [pdfReady, setPdfReady] = useState(false)
   const router = useRouter()
 
+  // Ambil profile dari backend dan isi form
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      const parsedUser = JSON.parse(userData)
-      setUser(parsedUser)
-      if (parsedUser.name) {
-        setFormData((prev) => ({ ...prev, name: parsedUser.name }))
-      }
+    if (session?.user?.name) {
+      setFormData((prev) => ({ ...prev, name: session.user.name }))
     }
-  }, [])
+    fetchProfile()
+    // eslint-disable-next-line
+  }, [session])
+
+  const fetchProfile = async () => {
+    const res = await fetch("/api/Profile", { method: "GET" })
+    if (res.ok) {
+      const data = await res.json()
+      setProfile(data)
+      setFormData({
+        name: session?.user?.name || "",
+        age: data.age || "",
+        background: data.background || "",
+        targetCareer: data.targetCareer || "",
+        interests: (data.interests || []).join(", "),
+        currentSkills: (data.currentSkills || []).join(", "),
+        uploadedCV: "",
+      })
+    }
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, cv: file }))
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!pdfReady) {
+      alert("PDF library belum siap. Silakan tunggu beberapa detik lalu coba lagi.")
+      return
     }
+    const file = e.target.files?.[0]
+    if (!file) return
+    setExtractingPdf(true) // mulai loading ekstraksi
+    const pdfjsLib = (window as any).pdfjsLib
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js"
+    const reader = new FileReader()
+    reader.onload = async (ev) => {
+      const typedarray = new Uint8Array(ev.target!.result as ArrayBuffer)
+      const pdf = await pdfjsLib.getDocument(typedarray).promise
+      let text = ""
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i)
+        const content = await page.getTextContent()
+        text += content.items.map((item: any) => item.str).join(" ") + "\n"
+      }
+      setFormData((prev) => ({ ...prev, uploadedCV: text }))
+      setExtractingPdf(false) // selesai ekstraksi
+    }
+    reader.readAsArrayBuffer(file)
   }
 
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    }
+    if (currentStep < 3) setCurrentStep(currentStep + 1)
   }
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1)
   }
 
-  const handleSave = () => {
-    // Save profile data
-    const updatedUser = {
-      ...user,
-      ...formData,
-      hasProfile: true,
+  // Simpan profile ke backend (POST jika belum ada, PUT jika sudah ada)
+  const handleSave = async () => {
+    const payload: any = {
+      age: formData.age,
+      background: formData.background,
+      targetCareer: formData.targetCareer,
+      interests: formData.interests.split(",").map(s => s.trim()).filter(Boolean),
+      currentSkills: formData.currentSkills.split(",").map(s => s.trim()).filter(Boolean),
+      uploadedCV: formData.uploadedCV, // isi CV sebagai string
     }
-    localStorage.setItem("user", JSON.stringify(updatedUser))
 
-    // Show skill assessment
-    setShowAssessment(true)
+    const method = profile ? "PUT" : "POST"
+    const res = await fetch("/api/Profile", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+
+    if (res.ok) {
+      setShowAssessment(true)
+      fetchProfile()
+    } else {
+      alert("Gagal menyimpan profile")
+    }
   }
 
   const handleAssessmentComplete = (results: any) => {
-    // Save assessment results
-    const userData = JSON.parse(localStorage.getItem("user") || "{}")
-    const updatedUser = {
-      ...userData,
-      assessmentResults: results,
-      hasCompletedAssessment: true,
-    }
-    localStorage.setItem("user", JSON.stringify(updatedUser))
-
     setShowAssessment(false)
     router.push("/profile/results")
   }
 
+  // Step 1: Informasi Dasar
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -97,18 +149,16 @@ export default function ProfileSetupPage() {
         </h2>
         <p className="text-muted-foreground">Ceritakan tentang diri Anda</p>
       </div>
-
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nama Lengkap</Label>
           <Input
             id="name"
             value={formData.name}
-            onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="Masukkan nama lengkap"
+            readOnly
+            className="bg-muted cursor-not-allowed"
           />
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="age">Umur</Label>
           <Input
@@ -119,30 +169,46 @@ export default function ProfileSetupPage() {
             placeholder="Masukkan umur"
           />
         </div>
-
         <div className="space-y-2">
-          <Label htmlFor="workInterest">Minat Kerja</Label>
-          <Select onValueChange={(value) => handleInputChange("workInterest", value)}>
+          <Label htmlFor="background">Latar Belakang</Label>
+          <Textarea
+            id="background"
+            value={formData.background}
+            onChange={(e) => handleInputChange("background", e.target.value)}
+            placeholder="Contoh: Fresh graduate IT, pengalaman magang, dll"
+            rows={3}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="targetCareer">Minat Kerja</Label>
+          <Select
+            value={formData.targetCareer}
+            onValueChange={(value) => handleInputChange("targetCareer", value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Pilih bidang yang diminati" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="technology">Teknologi & IT</SelectItem>
-              <SelectItem value="design">Desain & Kreatif</SelectItem>
-              <SelectItem value="business">Bisnis & Manajemen</SelectItem>
-              <SelectItem value="marketing">Marketing & Sales</SelectItem>
-              <SelectItem value="finance">Keuangan & Akuntansi</SelectItem>
-              <SelectItem value="healthcare">Kesehatan & Medis</SelectItem>
-              <SelectItem value="education">Pendidikan & Pelatihan</SelectItem>
-              <SelectItem value="engineering">Teknik & Engineering</SelectItem>
-              <SelectItem value="other">Lainnya</SelectItem>
+              {careerCategories.map((cat) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="interests">Minat Lain</Label>
+          <Input
+            id="interests"
+            value={formData.interests}
+            onChange={(e) => handleInputChange("interests", e.target.value)}
+            placeholder="Contoh: AI, Web, Finance (pisahkan dengan koma)"
+          />
         </div>
       </div>
     </div>
   )
 
+  // Step 2: Keahlian & CV
   const renderStep2 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -151,34 +217,53 @@ export default function ProfileSetupPage() {
         </h2>
         <p className="text-muted-foreground">Bagikan keahlian dan pengalaman Anda</p>
       </div>
-
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="skills">Keahlian</Label>
+          <Label htmlFor="currentSkills">Keahlian</Label>
           <Textarea
-            id="skills"
-            value={formData.skills}
-            onChange={(e) => handleInputChange("skills", e.target.value)}
-            placeholder="Sebutkan keahlian yang Anda miliki (contoh: JavaScript, Photoshop, Public Speaking, dll)"
+            id="currentSkills"
+            value={formData.currentSkills}
+            onChange={(e) => handleInputChange("currentSkills", e.target.value)}
+            placeholder="Sebutkan keahlian yang Anda miliki (pisahkan dengan koma)"
             rows={4}
           />
         </div>
-
         <div className="space-y-2">
-          <Label htmlFor="cv">Upload CV (Opsional)</Label>
+          <Label htmlFor="cv">Upload CV (PDF)</Label>
           <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-            <input id="cv" type="file" accept=".pdf,.doc,.docx" onChange={handleFileUpload} className="hidden" />
-            <label htmlFor="cv" className="cursor-pointer">
-              <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">{formData.cv ? formData.cv.name : "Klik untuk upload CV"}</p>
-              <p className="text-xs text-muted-foreground mt-1">Format: PDF, DOC, DOCX (Max 5MB)</p>
-            </label>
+            <input
+              id="cv"
+              type="file"
+              accept=".pdf"
+              onChange={handleFileUpload}
+              className="block"
+              disabled={!pdfReady || extractingPdf}
+            />
+            {!pdfReady && (
+              <div className="text-xs text-muted-foreground mt-2 flex items-center gap-2">
+                <span>Menyiapkan library PDF...</span>
+                <span className="animate-spin">⏳</span>
+              </div>
+            )}
+            {extractingPdf && (
+              <div className="text-xs text-blue-500 mt-2 flex items-center gap-2">
+                <span>Mengekstrak isi CV PDF...</span>
+                <span className="animate-spin">⏳</span>
+              </div>
+            )}
+            {formData.uploadedCV && (
+              <div className="mt-2 p-2 bg-muted rounded text-xs max-h-40 overflow-auto">
+                <strong>Isi CV:</strong>
+                <pre>{formData.uploadedCV.slice(0, 1000)}{formData.uploadedCV.length > 1000 ? "..." : ""}</pre>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   )
 
+  // Step 3: Konfirmasi
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -187,7 +272,6 @@ export default function ProfileSetupPage() {
         </h2>
         <p className="text-muted-foreground">Pastikan informasi Anda sudah benar</p>
       </div>
-
       <div className="space-y-4">
         <div className="p-4 bg-muted/20 rounded-lg">
           <h3 className="font-semibold mb-2">Informasi Dasar</h3>
@@ -198,21 +282,24 @@ export default function ProfileSetupPage() {
             <strong>Umur:</strong> {formData.age} tahun
           </p>
           <p>
-            <strong>Minat Kerja:</strong> {formData.workInterest}
+            <strong>Latar Belakang:</strong> {formData.background}
+          </p>
+          <p>
+            <strong>Minat Kerja:</strong> {formData.targetCareer}
+          </p>
+          <p>
+            <strong>Minat Lain:</strong> {formData.interests}
           </p>
         </div>
-
         <div className="p-4 bg-muted/20 rounded-lg">
           <h3 className="font-semibold mb-2">Keahlian</h3>
-          <p>{formData.skills || "Belum diisi"}</p>
+          <p>{formData.currentSkills || "Belum diisi"}</p>
         </div>
-
         <div className="p-4 bg-muted/20 rounded-lg">
           <h3 className="font-semibold mb-2">CV</h3>
-          <p>{formData.cv ? formData.cv.name : "Tidak ada file"}</p>
+          <p>{formData.cv ? formData.cv.name : (profile?.uploadedCV || "Tidak ada file")}</p>
         </div>
       </div>
-
       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
         <p className="text-blue-400 text-sm">
           <strong>Langkah Selanjutnya:</strong> Setelah menyimpan, Anda akan diminta mengikuti tes kemampuan untuk
@@ -222,8 +309,38 @@ export default function ProfileSetupPage() {
     </div>
   )
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!document.getElementById("pdfjs-script")) {
+        const script = document.createElement("script")
+        script.id = "pdfjs-script"
+        script.src = "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"
+        script.onload = () => setPdfReady(true)
+        script.onerror = () => alert("Gagal memuat library PDF. Coba refresh halaman atau ganti jaringan.")
+        document.body.appendChild(script)
+      } else {
+        const interval = setInterval(() => {
+          if ((window as any).pdfjsLib) {
+            setPdfReady(true)
+            clearInterval(interval)
+          }
+        }, 200)
+      }
+    }
+  }, [])
+
   return (
     <AuthGuard>
+      {/* Assessment Modal */}
+      {showAssessment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <AssessmentPage
+            onComplete={handleAssessmentComplete}
+            isOpen={showAssessment}
+          />
+        </div>
+      )}
+
       <div className="min-h-screen">
         {/* Navigation */}
         <nav className="relative z-20 p-6 border-b border-border">
@@ -249,11 +366,10 @@ export default function ProfileSetupPage() {
                 {[1, 2, 3].map((step) => (
                   <div key={step} className="flex items-center">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        step <= currentStep
-                          ? "bg-gradient-to-br from-primary to-accent text-white"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step <= currentStep
+                        ? "bg-gradient-to-br from-primary to-accent text-white"
+                        : "bg-muted text-muted-foreground"
+                        }`}
                     >
                       {step < currentStep ? <CheckCircle className="w-4 h-4" /> : step}
                     </div>
@@ -297,7 +413,6 @@ export default function ProfileSetupPage() {
         </div>
       </div>
 
-      <SkillAssessmentModal isOpen={showAssessment} onComplete={handleAssessmentComplete} />
     </AuthGuard>
   )
 }

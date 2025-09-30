@@ -9,10 +9,8 @@ import {
   AlertTriangle,
   User,
   BarChart3,
-
   ChevronLeft,
   ChevronRight,
-  TrainTrack,
   Paperclip,
   Gamepad,
 } from "lucide-react"
@@ -29,7 +27,6 @@ const navigation = [
   { name: "profile" as const, label: "Profile", icon: User, path: "/profile/results" },
   { name: "career-mapper" as const, label: "Career Mapper", icon: AlertTriangle, path: "/career-mapper" },
   { name: "learning-path" as const, label: "Learning Path", icon: BarChart3, path: "/learning-path" },
-  { name: "progress-tracker" as const, label: "Progress Tracker", icon: TrainTrack, path: "/progress" },
   { name: "portfolio" as const, label: "Portfolio", icon: Paperclip, path: "/portfolio" },
   { name: "gamification-hub" as const, label: "Gamification Hub", icon: Gamepad, path: "/gamification" },
 ]
