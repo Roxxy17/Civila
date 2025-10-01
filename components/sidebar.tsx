@@ -24,7 +24,7 @@ interface SidebarProps {
 
 const navigation = [
   { name: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { name: "profile" as const, label: "Profile", icon: User, path: "/profile/results" },
+  { name: "profile" as const, label: "Profile", icon: User, path: "/profile" },
   { name: "career-mapper" as const, label: "Career Mapper", icon: AlertTriangle, path: "/career-mapper" },
   { name: "learning-path" as const, label: "Learning Path", icon: BarChart3, path: "/learning-path" },
   { name: "portfolio" as const, label: "Portfolio", icon: Paperclip, path: "/portfolio" },
