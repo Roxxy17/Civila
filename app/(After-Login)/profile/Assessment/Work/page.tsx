@@ -8,9 +8,11 @@ import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { CheckCircle, Brain, Clock } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-export default function AssessmentPage() {
+export default function AssessmentWorkPage() {
   const [questions, setQuestions] = useState<any[]>([])
+  const [assessmentId, setAssessmentId] = useState<string>("")
   const [answers, setAnswers] = useState<number[]>([])
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
@@ -18,15 +20,18 @@ export default function AssessmentPage() {
   const [isCompleted, setIsCompleted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(300) // 5 minutes
+  const router = useRouter()
+  const [processingResult, setProcessingResult] = useState(false)
 
-  // Ambil soal dari backend
+  // Ambil soal dari backend (GET)
   useEffect(() => {
     const fetchQuestions = async () => {
       setLoading(true)
-      const res = await fetch("/api/Assesment/Question", { method: "POST" })
+      const res = await fetch("/api/Assesment/Question", { method: "GET" })
       if (res.ok) {
         const data = await res.json()
         setQuestions(data.questions)
+        if (data.assessmentId) setAssessmentId(data.assessmentId)
       }
       setLoading(false)
     }
@@ -47,6 +52,7 @@ export default function AssessmentPage() {
 
   const handleSubmitAnswers = async (answersToSubmit: number[]) => {
     const payload = {
+      assessmentId,
       answers: answersToSubmit.map((answerIndex, i) => ({
         questionIndex: i,
         answer: ["A", "B", "C", "D"][answerIndex]
@@ -54,17 +60,36 @@ export default function AssessmentPage() {
     }
 
     try {
-      await fetch("/api/Assesment/Answer", {
+      // Submit jawaban ke backend
+      const res = await fetch("/api/Assesment/Answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
+      if (res.ok) {
+        const data = await res.json()
+        const answerId = data._id || data.id || data.answerId
+        if (answerId) {
+          setProcessingResult(true)
+          // Generate hasil assessment (result) otomatis dan tunggu selesai
+          const resultRes = await fetch("/api/Assesment/Result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assessmentAnswerId: answerId })
+          })
+          setProcessingResult(false)
+          if (resultRes.ok) {
+            // Redirect ke halaman hasil assessment
+            router.push("/profile/Assessment/Results")
+          }
+        }
+      }
     } catch (err) {
+      setProcessingResult(false)
       // Optional: handle error
     }
   }
 
-  // Panggil fungsi ini setelah setIsCompleted(true) di handleNext
   const handleNext = async () => {
     if (selectedAnswer !== null) {
       const newAnswers = [...answers]
@@ -76,23 +101,60 @@ export default function AssessmentPage() {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1)
       } else {
-        // Pastikan jawaban terakhir sudah masuk ke array
         setIsCompleted(true)
         setSubmitting(true)
-        await handleSubmitAnswers(newAnswers) // Kirim newAnswers, bukan answers lama!
-        setTimeout(() => {
-          setSubmitting(false)
-        }, 2000)
+        await handleSubmitAnswers(newAnswers)
+        setSubmitting(false)
       }
     }
   }
 
   const progress = questions.length ? ((currentQuestion + 1) / questions.length) * 100 : 0
 
-  if (loading) return <div className="p-10 text-center">Memuat soal assessment...</div>
-  if (!questions.length) return <div className="p-10 text-center">Soal tidak tersedia.</div>
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        <div className="relative w-full max-w-md">
+          <FloatingCard className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-4 pulse-glow">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              <GradientText>Memuat Soal Assessment...</GradientText>
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Mohon tunggu, soal assessment sedang dimuat.
+            </p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          </FloatingCard>
+        </div>
+      </div>
+    )
+  }
 
-  if (isCompleted) {
+  if (!questions.length) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        <div className="relative w-full max-w-md">
+          <FloatingCard className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-accent rounded-full flex items-center justify-center mx-auto mb-4 pulse-glow">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              <GradientText>Soal Tidak Tersedia</GradientText>
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Tidak ada soal assessment yang bisa ditampilkan saat ini.
+            </p>
+          </FloatingCard>
+        </div>
+      </div>
+    )
+  }
+
+  if (isCompleted || processingResult) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
@@ -104,7 +166,11 @@ export default function AssessmentPage() {
             <h2 className="text-2xl font-bold mb-2">
               <GradientText>Tes Selesai!</GradientText>
             </h2>
-            <p className="text-muted-foreground mb-4">Hasil tes Anda sedang diproses...</p>
+            <p className="text-muted-foreground mb-4">
+              {processingResult
+                ? "Hasil tes Anda sedang diproses..."
+                : "Hasil tes Anda sedang diproses..."}
+            </p>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           </FloatingCard>
         </div>

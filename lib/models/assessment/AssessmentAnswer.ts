@@ -8,6 +8,7 @@ export interface IAnswer {
 
 export interface IAssessmentAnswer extends Document {
   user: mongoose.Types.ObjectId;
+  assessmentId?: mongoose.Types.ObjectId; // referensi ke assessment tertentu
   answers: IAnswer[];
   createdAt?: Date;
 }
@@ -24,6 +25,7 @@ const AnswerSchema = new Schema<IAnswer>(
 const AssessmentAnswerSchema = new Schema<IAssessmentAnswer>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    assessmentId: { type: Schema.Types.ObjectId, ref: "AssessmentQuestion" },
     answers: [AnswerSchema],
   },
   { timestamps: true }

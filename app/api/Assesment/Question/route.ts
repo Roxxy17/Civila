@@ -4,8 +4,10 @@ import AssessmentQuestion from "@/lib/models/assessment/AssessmentQuestion";
 import connectDB from "@/lib/mongodb";
 import { getToken } from "next-auth/jwt";
 
-const GEMINI_API_KEY =
-  process.env.GEMINI_API_KEY || "AIzaSyBPigQpP89fRFs77lPNkF88cq-SVDJXmFw";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is not set in environment variables");
+}
 
 export async function POST(req: NextRequest) {
   await connectDB();
@@ -47,7 +49,6 @@ Format:
     "correctAnswer": ""
   }
 ]
-
   `;
 
   // Panggil API Gemini
@@ -99,10 +100,8 @@ Format:
         let idx = -1;
         if (Array.isArray(q.options) && typeof q.correctAnswer === "string") {
           idx = q.options.findIndex((opt) => {
-            // Jika correctAnswer sudah "A"/"B"/"C"/"D", gunakan langsung
             if (["A", "B", "C", "D"].includes(q.correctAnswer))
               return opt.startsWith(q.correctAnswer + ".");
-            // Jika correctAnswer adalah isi jawaban, cocokkan dengan isi setelah abjad
             return (
               opt
                 .replace(/^([A-D]\. )/, "")
@@ -147,12 +146,41 @@ Format:
     );
   }
 
-  // Simpan ke database
-  const savedQuestions = await AssessmentQuestion.findOneAndUpdate(
-    { user: token.sub },
-    { $set: { questions: questions } },
-    { upsert: true, new: true }
-  );
+  // Simpan ke database: CREATE dokumen baru setiap kali assessment baru
+  const savedQuestions = await AssessmentQuestion.create({
+    user: token.sub,
+    questions: questions,
+    // Tambahkan field penanda jika perlu, misal:
+    // assessmentType: profile.targetCareer,
+    // profileSnapshot: { ...profile },
+  });
 
-  return NextResponse.json({ questions: savedQuestions.questions });
+  return NextResponse.json({
+    questions: savedQuestions.questions,
+    assessmentId: savedQuestions._id,
+  });
+}
+
+export async function GET(req: NextRequest) {
+  await connectDB();
+  const token = await getToken({ req });
+  if (!token?.sub) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Ambil assessment terakhir milik user
+  const questionDoc = await AssessmentQuestion.findOne({
+    user: token.sub,
+  }).sort({ createdAt: -1 });
+  if (!questionDoc) {
+    return NextResponse.json(
+      { error: "Soal assessment tidak ditemukan" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({
+    questions: questionDoc.questions,
+    assessmentId: questionDoc._id,
+  });
 }

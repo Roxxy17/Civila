@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Brain, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
-import AssessmentPage from "../Assessment/page"
+import AssessmentWorkPage from "../Assessment/Work/page"
+import AssessmentResultsPage from "../Assessment/Results/page"
+import GenerateAssessmentPage from "../Assessment/Generate/page"
 
 const careerCategories = [
   "Tecnologia & IT",
@@ -40,7 +42,10 @@ export default function ProfileSetupPage() {
     uploadedCV: "", // berisi isi CV
   })
   const [extractingPdf, setExtractingPdf] = useState(false)
+  const [showGenerate, setShowGenerate] = useState(false)
   const [showAssessment, setShowAssessment] = useState(false)
+  const [showResult, setShowResult] = useState(false)
+  const [latestResultId, setLatestResultId] = useState<string | null>(null)
   const [profile, setProfile] = useState<any>(null)
   const [pdfReady, setPdfReady] = useState(false)
   const router = useRouter()
@@ -117,7 +122,7 @@ export default function ProfileSetupPage() {
       targetCareer: formData.targetCareer,
       interests: formData.interests.split(",").map(s => s.trim()).filter(Boolean),
       currentSkills: formData.currentSkills.split(",").map(s => s.trim()).filter(Boolean),
-      uploadedCV: formData.uploadedCV, // isi CV sebagai string
+      uploadedCV: formData.uploadedCV,
     }
 
     const method = profile ? "PUT" : "POST"
@@ -128,17 +133,38 @@ export default function ProfileSetupPage() {
     })
 
     if (res.ok) {
-      setShowAssessment(true)
+      setShowGenerate(true) // Tampilkan modal generate assessment
       fetchProfile()
     } else {
       alert("Gagal menyimpan profile")
     }
   }
 
-  const handleAssessmentComplete = (results: any) => {
-    setShowAssessment(false)
-    router.push("/profile/results")
+  // Handler setelah generate assessment selesai
+  const handleGenerateComplete = () => {
+    setShowGenerate(false)
+    setShowAssessment(true)
   }
+
+  // Handler setelah assessment selesai
+  const handleAssessmentComplete = async (answerId: string) => {
+    // Proses result di backend
+    const resultRes = await fetch("/api/Assesment/Result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessmentAnswerId: answerId })
+    })
+    if (resultRes.ok) {
+      setShowAssessment(false)
+      setShowResult(true)
+      // Optionally, simpan id result terbaru jika ingin menampilkan langsung
+      // const data = await resultRes.json()
+      // setLatestResultId(data.results[data.results.length - 1]?._id)
+    }
+  }
+
+  // Handler tutup modal result
+  const handleCloseResult = () => setShowResult(false)
 
   // Step 1: Informasi Dasar
   const renderStep1 = () => (
@@ -331,12 +357,31 @@ export default function ProfileSetupPage() {
 
   return (
     <AuthGuard>
+      {/* Generate Assessment Modal */}
+      {showGenerate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <GenerateAssessmentPage
+            onComplete={handleGenerateComplete}
+          />
+        </div>
+      )}
+
       {/* Assessment Modal */}
       {showAssessment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <AssessmentPage
+          <AssessmentWorkPage
             onComplete={handleAssessmentComplete}
             isOpen={showAssessment}
+          />
+        </div>
+      )}
+
+      {/* Result Modal */}
+      {showResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <AssessmentResultsPage
+            showLatest={true}
+            onClose={handleCloseResult}
           />
         </div>
       )}
