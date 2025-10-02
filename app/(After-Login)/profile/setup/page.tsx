@@ -16,7 +16,7 @@ import { useSession } from "next-auth/react"
 import AssessmentWorkPage from "../Assessment/Work/page"
 import AssessmentResultsPage from "../Assessment/Results/page"
 import GenerateAssessmentPage from "../Assessment/Generate/page"
-
+  
 const careerCategories = [
   "Tecnologia & IT",
   "Design & Kreatif",
