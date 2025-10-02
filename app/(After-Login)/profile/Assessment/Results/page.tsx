@@ -1,7 +1,6 @@
 "use client"
 
-export const dynamic = "force-dynamic"
-
+import { Suspense } from "react"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { TrendingUp, CheckCircle, ListChecks } from "lucide-react"
@@ -10,7 +9,7 @@ import { GradientText } from "@/components/gradient-text"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 
-export default function AssessmentResultsPage() {
+function ResultsContent() {
   const [results, setResults] = useState<any[]>([])
   const [selectedResult, setSelectedResult] = useState<any | null>(null)
   const searchParams = useSearchParams()
@@ -163,5 +162,13 @@ export default function AssessmentResultsPage() {
         </FloatingCard>
       </div>
     </div>
+  )
+}
+
+export default function AssessmentResultsPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Memuat hasil assessment...</div>}>
+      <ResultsContent />
+    </Suspense>
   )
 }
