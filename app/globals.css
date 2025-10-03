@@ -4,10 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Dark theme with neon green accents */
-  --background: rgb(235, 237, 242);
+  /* Light theme colors */
+  --background: rgb(255, 255, 255);
   --foreground: rgb(22, 26, 32);
-  --card: rgb(235, 237, 242);
+  --card: rgb(255, 255, 255);
   --card-foreground: rgba(139, 137, 139, 0.055);
   --popover: rgb(49, 54, 61);
   --popover-foreground: rgb(235, 237, 242);
@@ -15,8 +15,8 @@
   --primary-foreground: oklch(0.946 0.007 268.55);
   --secondary: rgb(236, 197, 71);
   --secondary-foreground: rgb(119, 121, 126);
-  --muted: rgb(22, 26, 32);
-  --muted-foreground: rgb(53, 58, 65);
+  --muted: rgb(248, 250, 252);
+  --muted-foreground: rgb(100, 116, 139);
   --accent: rgb(129, 0, 250);
   --accent-foreground: oklch(0.08 0.02 140);
   --destructive: oklch(0.6 0.3 0);
@@ -80,7 +80,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Dark Purple Theme Colors */
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -119,18 +119,18 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Enhanced iridescent animated background */
+/* LIGHT MODE: Animated background - DOMINAN PUTIH dengan sedikit aksen kuning */
 .animated-bg {
-  background: radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(196, 181, 253, 0.1) 0%, transparent 50%),
+  background: radial-gradient(circle at 20% 80%, rgba(255, 235, 59, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 193, 7, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(255, 235, 59, 0.015) 0%, transparent 50%),
     linear-gradient(
       135deg,
-      oklch(0.08 0.02 270) 0%,
-      oklch(0.12 0.04 285) 25%,
-      oklch(0.1 0.03 255) 50%,
-      oklch(0.09 0.02 300) 75%,
-      oklch(0.08 0.02 270) 100%
+      rgb(255, 255, 255) 0%,
+      rgb(254, 254, 250) 25%,
+      rgb(255, 255, 252) 50%,
+      rgb(253, 253, 248) 75%,
+      rgb(255, 255, 255) 100%
     );
   position: relative;
   overflow: hidden;
@@ -143,6 +143,56 @@
   left: 0;
   right: 0;
   bottom: 0;
+  background: conic-gradient(
+      from 0deg at 30% 70%,
+      rgba(255, 235, 59, 0.05) 0deg,
+      rgba(255, 193, 7, 0.02) 60deg,
+      rgba(255, 235, 59, 0.04) 120deg,
+      rgba(255, 193, 7, 0.05) 180deg,
+      rgba(255, 235, 59, 0.02) 240deg,
+      rgba(255, 235, 59, 0.02) 360deg
+    ),
+    conic-gradient(
+      from 180deg at 70% 30%,
+      rgba(255, 193, 7, 0.02) 0deg,
+      rgba(255, 235, 59, 0.02) 90deg,
+      rgba(255, 235, 59, 0.04) 180deg,
+      rgba(255, 193, 7, 0.02) 270deg,
+      rgba(255, 193, 7, 0.02) 360deg
+    );
+  animation: iridescent-flow 25s ease-in-out infinite;
+  opacity: 0.2;
+}
+
+.animated-bg::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at 25% 25%, rgba(255, 235, 59, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse at 75% 75%, rgba(255, 193, 7, 0.06) 0%, transparent 70%);
+  animation: aurora-dance 20s ease-in-out infinite reverse;
+  mix-blend-mode: normal;
+}
+
+/* DARK MODE: Keep purple theme */
+.dark .animated-bg {
+  background: radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(196, 181, 253, 0.1) 0%, transparent 50%),
+    linear-gradient(
+      135deg,
+      oklch(0.08 0.02 270) 0%,
+      oklch(0.12 0.04 285) 25%,
+      oklch(0.1 0.03 255) 50%,
+      oklch(0.09 0.02 300) 75%,
+      oklch(0.08 0.02 270) 100%
+    );
+}
+
+.dark .animated-bg::before {
   background: conic-gradient(
       from 0deg at 30% 70%,
       rgba(139, 92, 246, 0.3) 0deg,
@@ -160,27 +210,18 @@
       rgba(147, 51, 234, 0.2) 270deg,
       rgba(168, 85, 247, 0.2) 360deg
     );
-  animation: iridescent-flow 25s ease-in-out infinite;
   opacity: 0.6;
 }
 
-.animated-bg::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.dark .animated-bg::after {
   background: radial-gradient(ellipse at 25% 25%, rgba(139, 92, 246, 0.4) 0%, transparent 70%),
     radial-gradient(ellipse at 75% 75%, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
-  animation: aurora-dance 20s ease-in-out infinite reverse;
   mix-blend-mode: screen;
 }
 
-/* New iridescent animation keyframes */
+/* Animation keyframes remain the same */
 @keyframes iridescent-flow {
-  0%,
-  100% {
+  0%, 100% {
     transform: rotate(0deg) scale(1);
     filter: hue-rotate(0deg) brightness(1);
   }
@@ -199,8 +240,7 @@
 }
 
 @keyframes aurora-dance {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateX(0%) translateY(0%) rotate(0deg);
     opacity: 0.6;
   }
@@ -214,10 +254,52 @@
   }
 }
 
+/* Update particles for light mode - sangat subtle kuning */
+.particle:nth-child(4n + 1) {
+  background: radial-gradient(circle, rgba(255, 235, 59, 0.4) 0%, rgba(255, 235, 59, 0.1) 100%);
+  box-shadow: 0 0 4px rgba(255, 235, 59, 0.3);
+}
+
+.particle:nth-child(4n + 2) {
+  background: radial-gradient(circle, rgba(255, 193, 7, 0.4) 0%, rgba(255, 193, 7, 0.1) 100%);
+  box-shadow: 0 0 4px rgba(255, 193, 7, 0.3);
+}
+
+.particle:nth-child(4n + 3) {
+  background: radial-gradient(circle, rgba(255, 235, 59, 0.3) 0%, rgba(255, 235, 59, 0.05) 100%);
+  box-shadow: 0 0 3px rgba(255, 235, 59, 0.2);
+}
+
+.particle:nth-child(4n + 4) {
+  background: radial-gradient(circle, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.05) 100%);
+  box-shadow: 0 0 3px rgba(255, 193, 7, 0.2);
+}
+
+/* Dark mode particles keep purple */
+.dark .particle:nth-child(4n + 1) {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0.2) 100%);
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
+}
+
+.dark .particle:nth-child(4n + 2) {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, rgba(168, 85, 247, 0.2) 100%);
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.6);
+}
+
+.dark .particle:nth-child(4n + 3) {
+  background: radial-gradient(circle, rgba(196, 181, 253, 0.8) 0%, rgba(196, 181, 253, 0.2) 100%);
+  box-shadow: 0 0 6px rgba(196, 181, 253, 0.6);
+}
+
+.dark .particle:nth-child(4n + 4) {
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.2) 100%);
+  box-shadow: 0 0 6px rgba(147, 51, 234, 0.6);
+}
+
+/* Rest of the existing CSS remains the same... */
 /* Floating Animation */
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px) rotate(0deg);
   }
   33% {
@@ -245,26 +327,6 @@
   height: 3px;
   border-radius: 50%;
   animation: particle-float 20s linear infinite;
-}
-
-.particle:nth-child(4n + 1) {
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(139, 92, 246, 0.2) 100%);
-  box-shadow: 0 0 6px rgba(139, 92, 246, 0.6);
-}
-
-.particle:nth-child(4n + 2) {
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.8) 0%, rgba(168, 85, 247, 0.2) 100%);
-  box-shadow: 0 0 6px rgba(168, 85, 247, 0.6);
-}
-
-.particle:nth-child(4n + 3) {
-  background: radial-gradient(circle, rgba(196, 181, 253, 0.8) 0%, rgba(196, 181, 253, 0.2) 100%);
-  box-shadow: 0 0 6px rgba(196, 181, 253, 0.6);
-}
-
-.particle:nth-child(4n + 4) {
-  background: radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.2) 100%);
-  box-shadow: 0 0 6px rgba(147, 51, 234, 0.6);
 }
 
 @keyframes particle-float {
@@ -305,8 +367,7 @@
 }
 
 @keyframes float-card {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px) rotate(0deg);
   }
   25% {
@@ -338,8 +399,7 @@
 }
 
 @keyframes gradient-shift {
-  0%,
-  100% {
+  0%, 100% {
     background-position: 0% 50%;
   }
   50% {
