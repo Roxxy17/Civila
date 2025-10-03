@@ -22,8 +22,8 @@ const ResultSchema = new Schema<IResult>(
     recommendedCareers: [{ type: String }],
     createdAt: { type: Date, default: Date.now }
   },
-  { _id: false }
-);
+  { _id: true }
+);  
 
 const AssessmentResultSchema = new Schema<IAssessmentResult>(
   {

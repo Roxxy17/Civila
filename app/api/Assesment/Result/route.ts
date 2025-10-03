@@ -127,11 +127,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Ambil semua hasil assessment milik user
-  const resultDoc = await AssessmentResult.findOne({ user: token.sub });
-  if (!resultDoc || !resultDoc.results || resultDoc.results.length === 0) {
-    return NextResponse.json({ results: [] });
-  }
+  // Ambil semua dokumen AssessmentResult milik user
+  const docs = await AssessmentResult.find({ user: token.sub });
 
-  return NextResponse.json({ results: resultDoc.results });
+  // Flatten results agar setiap result punya parentId (_id dokumen utama)
+  const results = docs.flatMap((doc) =>
+    doc.results.map((result) => ({
+      ...result.toObject(),
+      parentId: doc._id, // tambahkan parentId
+      createdAt: result.createdAt,
+      overallScore: result.overallScore,
+      recommendedCareers: result.recommendedCareers,
+      breakdown: result.breakdown,
+      // tambahkan field lain yang dibutuhkan
+    }))
+  );
+
+  return NextResponse.json({ results });
 }

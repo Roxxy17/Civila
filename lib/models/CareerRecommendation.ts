@@ -9,6 +9,9 @@ export interface ICareerRecommendation extends Document {
   estimatedLearningTime?: string;
   requiredSkills?: string[];
   roadmap?: mongoose.Types.ObjectId;
+  assessmentResult: mongoose.Types.ObjectId;
+  isPicked? : boolean;
+  pickedAt?: Date;
 }
 
 const CareerRecommendationSchema = new Schema<ICareerRecommendation>(
@@ -21,6 +24,9 @@ const CareerRecommendationSchema = new Schema<ICareerRecommendation>(
     estimatedLearningTime: { type: String },
     requiredSkills: [{ type: String }],
     roadmap: { type: Schema.Types.ObjectId, ref: "Roadmap" },
+    assessmentResult: { type: Schema.Types.ObjectId, ref: "AssessmentResult" },
+    isPicked: { type: Boolean, default: false },
+    pickedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
