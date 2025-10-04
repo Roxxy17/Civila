@@ -11,37 +11,44 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-function CareerPickButton({ careerName, assessmentResultId }: { careerName: string, assessmentResultId: string }) {
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState("")
+function CareerPickButton({
+  careerName,
+  assessmentResultId,
+  isPicked,
+}: {
+  careerName: string;
+  assessmentResultId: string;
+  isPicked?: boolean;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(isPicked ?? false);
+  const [error, setError] = useState("");
 
   const handlePick = async () => {
-    setLoading(true)
-    setError("")
-    setSuccess(false)
-    console.log("careerName:", careerName, "assessmentResultId:", assessmentResultId);
+    setLoading(true);
+    setError("");
+    setSuccess(false);
     try {
       const res = await fetch("/api/CareerRecommendation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           careerName,
-          assessmentResultId
+          assessmentResultId,
         }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
       if (res.ok && data.success) {
-        setSuccess(true)
+        setSuccess(true);
       } else {
-        setError(data.error || "Gagal memilih karier")
+        setError(data.error || "Gagal memilih karier");
       }
     } catch (err) {
-      setError("Gagal memilih karier")
+      setError("Gagal memilih karier");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="p-4 rounded-xl bg-background border border-border hover:border-primary/30 transition-colors group flex items-center gap-4">
@@ -54,8 +61,8 @@ function CareerPickButton({ careerName, assessmentResultId }: { careerName: stri
           <Star className="w-3 h-3 text-yellow-500" />
           <span className="text-xs text-muted-foreground">Rekomendasi tinggi</span>
         </div>
-        {success && (
-          <span className="text-xs text-green-600 block mt-1">Karier berhasil dipilih!</span>
+        {(success || isPicked) && (
+          <span className="text-xs text-green-600 block mt-1">Karier sudah dipilih!</span>
         )}
         {error && (
           <span className="text-xs text-red-600 block mt-1">{error}</span>
@@ -64,14 +71,18 @@ function CareerPickButton({ careerName, assessmentResultId }: { careerName: stri
       <Button
         size="sm"
         className="ml-2"
-        disabled={loading || success}
+        disabled={loading || success || isPicked}
         onClick={handlePick}
       >
-        {loading ? "Memproses..." : success ? "Dipilih" : "Pilih Karier"}
+        {loading
+          ? "Memproses..."
+          : success || isPicked
+            ? "Sudah Dipilih"
+            : "Pilih Karier"}
         <ChevronRight className="w-4 h-4 ml-1" />
       </Button>
     </div>
-  )
+  );
 }
 
 // Debounce hook untuk search
@@ -101,9 +112,30 @@ function ResultsContent() {
   const [filterScore, setFilterScore] = useState("all")
   const searchParams = useSearchParams()
   const router = useRouter()
+  const [pickedCareers, setPickedCareers] = useState<{ [key: string]: boolean }>({})
+
 
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
+
+  useEffect(() => {
+    // Fetch picked careers
+    const fetchPicked = async () => {
+      const res = await fetch("/api/CareerRecommendation");
+      if (res.ok) {
+        const data = await res.json();
+        // Buat map: key = assessmentResultId + careerName, value = isPicked
+        const map: { [key: string]: boolean } = {};
+        data.recommendations.forEach((rec: any) => {
+          if (rec.isPicked && rec.assessmentResult && rec.careerName) {
+            map[`${rec.assessmentResult}_${rec.careerName}`] = true;
+          }
+        });
+        setPickedCareers(map);
+      }
+    };
+    fetchPicked();
+  }, [results]);
 
   // Handle hydration
   useEffect(() => {
@@ -737,7 +769,8 @@ function ResultsContent() {
                           <CareerPickButton
                             key={`recommendation-${idx}-${rec}`}
                             careerName={rec}
-                            assessmentResultId={selectedResult.parentId} // pastikan ini _id dokumen utama!
+                            assessmentResultId={selectedResult.parentId}
+                            isPicked={pickedCareers[`${selectedResult.parentId}_${rec}`]}
                           />
                         ))}
                       </div>
