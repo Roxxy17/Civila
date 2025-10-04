@@ -65,10 +65,25 @@ Berdasarkan hasil assessment berikut:
 - Skor keseluruhan: ${overallScore}
 - Breakdown kategori: ${JSON.stringify(breakdown)}
 
-Berikan 2-3 rekomendasi karier yang paling sesuai untuk user, dalam format array string JSON valid tanpa penjelasan tambahan.
+Berikan 3-5 rekomendasi karier yang paling sesuai untuk user.
+Output berupa array JSON, setiap item:
+{
+  "careerName": "Nama Karier",
+  "reason": "Alasan singkat kenapa cocok",
+  "matchPercentage": angka 0-100
+}
+Contoh:
+[
+  {
+    "careerName": "Data Analyst",
+    "reason": "Skill analisis data dan problem solving sangat kuat.",
+    "matchPercentage": 90
+  }
+]
+Jangan beri penjelasan lain, hanya array JSON valid seperti di atas.
 `;
 
-  let recommendedCareers: string[] = [];
+  let recommendedCareers: ICareerRecommendation[] = [];
 
   try {
     const geminiRes = await fetch(
@@ -84,20 +99,31 @@ Berikan 2-3 rekomendasi karier yang paling sesuai untuk user, dalam format array
     );
     const geminiData = await geminiRes.json();
     let text = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    // Bersihkan jika ada ```json ... ```
     if (text.startsWith("```json")) {
-      text = text
-        .replace(/^```json/, "")
-        .replace(/```$/, "")
-        .trim();
+      text = text.replace(/^```json/, "").replace(/```$/, "").trim();
     }
     if (text.startsWith("```")) {
       text = text.replace(/^```/, "").replace(/```$/, "").trim();
     }
-    recommendedCareers = JSON.parse(text);
+    try {
+      recommendedCareers = JSON.parse(text);
+      // Validasi agar selalu array of object
+      if (!Array.isArray(recommendedCareers)) {
+        recommendedCareers = [];
+      }
+    } catch (err) {
+      recommendedCareers = [{
+        careerName: "Generalist",
+        reason: "Karier umum untuk berbagai skill.",
+        matchPercentage: 50
+      }];
+    }
   } catch (err) {
-    // Fallback jika Gemini gagal
-    recommendedCareers = ["Generalist"];
+    recommendedCareers = [{
+      careerName: "Generalist",
+      reason: "Karier umum untuk berbagai skill.",
+      matchPercentage: 50
+    }];
   }
 
   // Simpan hasil

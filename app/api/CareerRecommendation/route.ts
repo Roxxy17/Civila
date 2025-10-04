@@ -32,9 +32,22 @@ export async function POST(req: NextRequest) {
 
   // Generate detail karir dari Gemini API
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  const prompt = `
-Berdasarkan karier berikut: "${careerName}"
-Berikan data JSON valid (tanpa penjelasan) dengan field:
+const prompt = `
+Anda adalah AI advisor karier. Analisa data assessment berikut dan berikan detail karier "${careerName}" yang paling relevan untuk user ini.
+
+Data assessment user:
+{
+  "overallScore": ${assessmentResult.overallScore || 0},
+  "breakdown": ${JSON.stringify(assessmentResult.breakdown || {})},
+  "userProfile": {
+    "age": ${assessmentResult.userProfile?.age || 0},
+    "educationBackground": "${assessmentResult.userProfile?.educationBackground || ""}",
+    "skills": ${JSON.stringify(assessmentResult.userProfile?.skills || [])},
+    "interests": ${JSON.stringify(assessmentResult.userProfile?.interests || [])}
+  }
+}
+
+Berikan output JSON valid (tanpa penjelasan) dengan field:
 {
   "level": "Junior/Mid/Senior",
   "salaryRange": "RpX - RpY",

@@ -9,10 +9,14 @@ import { useState } from "react";
 // Reuse CareerPickButton from your results/page.tsx
 function CareerPickButton({
   careerName,
+  reason,
+  matchPercentage,
   assessmentResultId,
   isPicked,
 }: {
   careerName: string;
+  reason: string;
+  matchPercentage: number;
   assessmentResultId: string;
   isPicked?: boolean;
 }) {
@@ -56,6 +60,12 @@ function CareerPickButton({
         <div className="flex items-center gap-1 mt-1">
           <Star className="w-3 h-3 text-yellow-500" />
           <span className="text-xs text-muted-foreground">Rekomendasi tinggi</span>
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          {reason}
+        </div>
+        <div className="text-xs text-blue-600 mt-1 font-semibold">
+          Match: {matchPercentage}%
         </div>
         {(success || isPicked) && (
           <span className="text-xs text-green-600 block mt-1">Karier sudah dipilih!</span>
@@ -244,11 +254,13 @@ export default function AssessmentResultModal({ result, onClose }: { result: any
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {result.recommendedCareers.map((rec: string, idx: number) => (
+                    {result.recommendedCareers.map((rec: any, idx: number) => (
                       <CareerPickButton
-                        key={`recommendation-${idx}-${rec}`}
-                        careerName={rec}
-                        assessmentResultId={result.parentId} // pastikan ini _id dokumen utama!
+                        key={`recommendation-${idx}-${rec.careerName}`}
+                        careerName={rec.careerName}
+                        reason={rec.reason}
+                        matchPercentage={rec.matchPercentage}
+                        assessmentResultId={result.parentId}
                       />
                     ))}
                   </div>

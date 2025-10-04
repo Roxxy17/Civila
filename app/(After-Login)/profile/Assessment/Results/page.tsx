@@ -15,10 +15,12 @@ function CareerPickButton({
   careerName,
   assessmentResultId,
   isPicked,
+  onPick, // tambahkan prop ini
 }: {
   careerName: string;
   assessmentResultId: string;
   isPicked?: boolean;
+  onPick?: () => void; // tambahkan type ini
 }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(isPicked ?? false);
@@ -40,6 +42,7 @@ function CareerPickButton({
       const data = await res.json();
       if (res.ok && data.success) {
         setSuccess(true);
+        if (onPick) onPick(); // panggil callback setelah sukses
       } else {
         setError(data.error || "Gagal memilih karier");
       }
@@ -551,10 +554,10 @@ function ResultsContent() {
                         <span>Rekomendasi Karier:</span>
                       </div>
                       <div className="space-y-2">
-                        {careers.slice(0, 2).map((rec: string, i: number) => (
-                          <div key={`career-${i}-${rec}`} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                        {careers.slice(0, 2).map((rec: any, i: number) => (
+                          <div key={`career-${i}-${rec.careerName}`} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
                             <Star className="w-3 h-3 text-yellow-500 flex-shrink-0" />
-                            <span className="text-sm font-medium text-foreground truncate">{rec}</span>
+                            <span className="text-sm font-medium text-foreground truncate">{rec.careerName}</span>
                           </div>
                         ))}
                         {careers.length > 2 && (
@@ -765,13 +768,29 @@ function ResultsContent() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {selectedResult.recommendedCareers.map((rec: string, idx: number) => (
-                          <CareerPickButton
-                            key={`recommendation-${idx}-${rec}`}
-                            careerName={rec}
-                            assessmentResultId={selectedResult.parentId}
-                            isPicked={pickedCareers[`${selectedResult.parentId}_${rec}`]}
-                          />
+                        {selectedResult.recommendedCareers.map((rec: any, idx: number) => (
+                          <div key={`recommendation-${idx}-${rec.careerName}`} className="space-y-2">
+                            <CareerPickButton
+                              careerName={rec.careerName}
+                              assessmentResultId={selectedResult.parentId}
+                              isPicked={pickedCareers[`${selectedResult.parentId}_${rec.careerName}`]}
+                              onPick={() => {
+                                setPickedCareers(prev => ({
+                                  ...prev,
+                                  [`${selectedResult.parentId}_${rec.careerName}`]: true
+                                }));
+                              }}
+                            />
+                            <div className="ml-14">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Star className="w-3 h-3 text-yellow-500" />
+                                <span>Match: <span className="font-bold text-primary">{rec.matchPercentage ?? "-"}%</span></span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {rec.reason}
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     </div>

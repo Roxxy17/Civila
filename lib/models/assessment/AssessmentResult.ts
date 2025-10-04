@@ -1,10 +1,16 @@
 import mongoose, { Schema, Document } from "mongoose"
 
+export interface ICareerRecommendation {
+  careerName: string;
+  reason?: string;
+  matchPercentage?: number;
+}
+
 export interface IResult {
-  assessmentAnswer: mongoose.Types.ObjectId; // ref ke dokumen jawaban
+  assessmentAnswer: mongoose.Types.ObjectId;
   overallScore: number;
   breakdown: Record<string, number>;
-  recommendedCareers: string[];
+  recommendedCareers: ICareerRecommendation[];
   createdAt?: Date;
 }
 
@@ -14,16 +20,26 @@ export interface IAssessmentResult extends Document {
   createdAt?: Date;
 }
 
+// Embedded schema for recommendedCareers
+const CareerRecommendationSchema = new Schema<ICareerRecommendation>(
+  {
+    careerName: { type: String, required: true },
+    reason: { type: String },
+    matchPercentage: { type: Number },
+  },
+  { _id: false }
+);
+
 const ResultSchema = new Schema<IResult>(
   {
     assessmentAnswer: { type: Schema.Types.ObjectId, ref: "AssessmentAnswer", required: true },
     overallScore: { type: Number, required: true },
-    breakdown: { type: Map, of: Number },
-    recommendedCareers: [{ type: String }],
+    breakdown: { type: Schema.Types.Mixed }, // lebih fleksibel
+    recommendedCareers: [CareerRecommendationSchema],
     createdAt: { type: Date, default: Date.now }
   },
-  { _id: true }
-);  
+  { _id: false }
+);
 
 const AssessmentResultSchema = new Schema<IAssessmentResult>(
   {
