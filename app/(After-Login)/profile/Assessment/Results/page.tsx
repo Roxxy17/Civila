@@ -22,7 +22,7 @@ function CareerPickButton({ careerName, assessmentResultId }: { careerName: stri
     setSuccess(false)
     console.log("careerName:", careerName, "assessmentResultId:", assessmentResultId);
     try {
-      const res = await fetch("/api/career-recommendation", {
+      const res = await fetch("/api/CareerRecommendation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
