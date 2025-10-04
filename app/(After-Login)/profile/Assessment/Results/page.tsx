@@ -42,14 +42,21 @@ function CareerPickButton({
   careerName,
   assessmentResultId,
   isPicked,
+  onPickSuccess, // Tambahkan callback
 }: {
   careerName: string;
   assessmentResultId: string;
   isPicked?: boolean;
+  onPickSuccess?: (careerName: string, assessmentResultId: string) => void; // Tambahkan prop
 }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(isPicked ?? false);
   const [error, setError] = useState("");
+
+  // Update success state ketika isPicked berubah
+  useEffect(() => {
+    setSuccess(isPicked ?? false);
+  }, [isPicked]);
 
   const handlePick = async () => {
     setLoading(true);
@@ -67,6 +74,8 @@ function CareerPickButton({
       const data = await res.json();
       if (res.ok && data.success) {
         setSuccess(true);
+        // Panggil callback untuk update parent state
+        onPickSuccess?.(careerName, assessmentResultId);
       } else {
         setError(data.error || "Gagal memilih karier");
       }
@@ -152,13 +161,12 @@ function ResultsContent() {
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  useEffect(() => {
-    // Fetch picked careers
-    const fetchPicked = async () => {
+  // Function untuk fetch picked careers
+  const fetchPickedCareers = useCallback(async () => {
+    try {
       const res = await fetch("/api/CareerRecommendation");
       if (res.ok) {
         const data = await res.json();
-        // Buat map: key = assessmentResultId + careerName, value = isPicked
         const map: { [key: string]: boolean } = {};
         data.recommendations.forEach((rec: any) => {
           if (rec.isPicked && rec.assessmentResult && rec.careerName) {
@@ -167,9 +175,26 @@ function ResultsContent() {
         });
         setPickedCareers(map);
       }
-    };
-    fetchPicked();
-  }, [results]);
+    } catch (error) {
+      console.error("Error fetching picked careers:", error);
+    }
+  }, []);
+
+  // Fetch picked careers saat component mount dan saat results berubah
+  useEffect(() => {
+    if (mounted && results.length > 0) {
+      fetchPickedCareers();
+    }
+  }, [mounted, results.length, fetchPickedCareers]);
+
+  // Handle success pick career
+  const handlePickSuccess = useCallback((careerName: string, assessmentResultId: string) => {
+    const key = `${assessmentResultId}_${careerName}`;
+    setPickedCareers(prev => ({
+      ...prev,
+      [key]: true
+    }));
+  }, []);
 
   // Handle hydration
   useEffect(() => {
@@ -871,7 +896,7 @@ function ResultsContent() {
                   </FloatingCard>
                 )}
 
-                {/* Recommendations */}
+                {/* Recommendations dengan callback */}
                 {selectedResult.recommendedCareers &&
                   selectedResult.recommendedCareers.length > 0 && (
                     <FloatingCard className="bg-primary/5 border-primary/20">
@@ -903,6 +928,7 @@ function ResultsContent() {
                                     `${selectedResult.parentId}_${rec.careerName}`
                                   ]
                                 }
+                                onPickSuccess={handlePickSuccess} // Tambahkan callback
                               />
                             )
                           )}
