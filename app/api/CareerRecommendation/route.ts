@@ -72,7 +72,19 @@ Berikan data JSON valid (tanpa penjelasan) dengan field:
     if (text.startsWith("```")) {
       text = text.replace(/^```/, "").replace(/```$/, "").trim();
     }
-    careerData = JSON.parse(text);
+    try {
+      careerData = JSON.parse(text);
+    } catch (err) {
+      console.error("Gagal parse Gemini response:", text);
+      // fallback default
+      careerData = {
+        level: "Junior",
+        salaryRange: "Rp5.000.000 - Rp10.000.000",
+        growthRate: "10%/tahun",
+        estimatedLearningTime: "6 bulan",
+        requiredSkills: ["Komunikasi", "Problem Solving"],
+      };
+    }
   } catch (err) {
     // fallback default
     careerData = {

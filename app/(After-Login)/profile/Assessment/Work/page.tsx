@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { CheckCircle, Brain, Clock, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import AssessmentResultModal from "@/components/AssessmentResultModal"; // Buat komponen modal hasil assessment
 
 export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?: () => void, isOpen?: boolean }) {
   const [questions, setQuestions] = useState<any[]>([])
@@ -22,6 +23,8 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
   const [timeLeft, setTimeLeft] = useState(900) // 15 minutes
   const router = useRouter()
   const [processingResult, setProcessingResult] = useState(false)
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [latestResult, setLatestResult] = useState<any>(null);
 
   // Ambil soal dari backend (GET)
   useEffect(() => {
@@ -74,39 +77,47 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
       }))
     }
 
-    try {
-      setProcessingResult(true)
-      // Submit jawaban ke backend
-      const res = await fetch("/api/Assesment/Answer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-      if (res.ok) {
-        const data = await res.json()
-        const answerId = data._id || data.id || data.answerId
-        if (answerId) {
-          // Generate hasil assessment (result) otomatis dan tunggu selesai
-          const resultRes = await fetch("/api/Assesment/Result", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ assessmentAnswerId: answerId })
-          })
-          setProcessingResult(false)
-          if (resultRes.ok) {
-            // Callback completion
-            if (onComplete) onComplete()
-            // Redirect ke halaman hasil assessment
-            router.push("/profile/Assessment/Results")
+      try {
+        setProcessingResult(true)
+        const res = await fetch("/api/Assesment/Answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        if (res.ok) {
+          const data = await res.json()
+          const answerId = data._id || data.id || data.answerId
+          if (answerId) {
+            const resultRes = await fetch("/api/Assesment/Result", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ assessmentAnswerId: answerId })
+            })
+            if (resultRes.ok) {
+              // Ambil hasil assessment terbaru
+              const latestRes = await fetch("/api/Assesment/Result?latest=true");
+              const latestData = await latestRes.json();
+              if (latestData.results && latestData.results.length > 0) {
+                setLatestResult(latestData.results[latestData.results.length - 1]);
+                setShowResultModal(true);
+                setProcessingResult(false); // <-- pastikan ini dipanggil di sini!
+                setIsCompleted(false);      // <-- pastikan ini juga!
+              }
+              if (onComplete) onComplete();
+            } else {
+              setProcessingResult(false);
+            }
+          } else {
+            setProcessingResult(false);
           }
+        } else {
+          setProcessingResult(false);
         }
+      } catch (err) {
+        setProcessingResult(false)
+        console.error("Error submitting answers:", err)
       }
-    } catch (err) {
-      setProcessingResult(false)
-      console.error("Error submitting answers:", err)
-      // Optional: handle error
     }
-  }
 
   const handleNext = async () => {
     if (selectedAnswer !== null) {
@@ -203,7 +214,7 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
     )
   }
 
-  if (isCompleted || processingResult) {
+  if ((isCompleted || processingResult) && !showResultModal) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animated-bg">
         <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md pointer-events-none" />
@@ -406,6 +417,15 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
           </div>
         </FloatingCard>
       </div>
+      {showResultModal && latestResult && (
+        <AssessmentResultModal
+          result={latestResult}
+          onClose={() => {
+            setShowResultModal(false);
+            router.push("/profile/Assessment/Results"); // Redirect setelah modal ditutup
+          }}
+        />
+      )}
     </div>
   )
 }
