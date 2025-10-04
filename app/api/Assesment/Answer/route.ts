@@ -4,6 +4,21 @@ import connectDB from "@/lib/mongodb";
 import AssessmentAnswer from "@/lib/models/assessment/AssessmentAnswer";
 import AssessmentQuestion from "@/lib/models/assessment/AssessmentQuestion";
 
+export async function GET(req: NextRequest) {
+  await connectDB();
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+  const answerDoc = await AssessmentAnswer.findById(id);
+  if (!answerDoc) {
+    return NextResponse.json({ error: "Answer not found" }, { status: 404 });
+  }
+  return NextResponse.json({ answers: answerDoc.answers, assessmentId: answerDoc.assessmentId });
+}
+
+
 export async function POST(req: NextRequest) {
   await connectDB();
   const token = await getToken({ req });

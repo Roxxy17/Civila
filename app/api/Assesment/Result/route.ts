@@ -160,12 +160,12 @@ export async function GET(req: NextRequest) {
   const results = docs.flatMap((doc) =>
     doc.results.map((result) => ({
       ...result.toObject(),
-      parentId: doc._id, // tambahkan parentId
+      parentId: doc._id,
       createdAt: result.createdAt,
       overallScore: result.overallScore,
       recommendedCareers: result.recommendedCareers,
       breakdown: result.breakdown,
-      // tambahkan field lain yang dibutuhkan
+      assessmentAnswerId: result.assessmentAnswer, // <-- tambahkan ini!
     }))
   );
 
