@@ -1,62 +1,74 @@
-import { NextRequest, NextResponse } from "next/server"
-import Profile from "@/lib/models/Profile"
-import User from "@/lib/models/User"
-import connectDB from "@/lib/mongodb"
-import { getToken } from "next-auth/jwt"
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import connectDB from "@/lib/mongodb";
+import Profile from "@/lib/models/Profile";
+import User from "@/lib/models/User";
 
-export async function GET(req: NextRequest) {
-  await connectDB()
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (!token || !token.sub) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  // Cari profile berdasarkan user id dari token
-  const profile = await Profile.findOne({ user: token.sub })
-  if (!profile) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+    await connectDB();
+    const profile = await Profile.findOne({ user: session.user.id });
+
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ profile });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-  return NextResponse.json(profile)
 }
 
-export async function POST(req: NextRequest) {
-  await connectDB()
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (!token || !token.sub) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const body = await req.json()
-  // Cek apakah profile sudah ada
-  const existing = await Profile.findOne({ user: token.sub })
-  if (existing) {
-    return NextResponse.json({ error: "Profile already exists" }, { status: 400 })
-  }
+    const data = await request.json();
+    await connectDB();
 
-  // Buat profile baru
-  const profile = await Profile.create({
-    user: token.sub,
-    ...body,
-  })
-  return NextResponse.json(profile, { status: 201 })
-}
+    // Check if profile already exists
+    const existingProfile = await Profile.findOne({ user: session.user.id });
+    
+    let profile;
+    if (existingProfile) {
+      // Update existing profile
+      profile = await Profile.findOneAndUpdate(
+        { user: session.user.id },
+        { ...data, updatedAt: new Date() },
+        { new: true }
+      );
+    } else {
+      // Create new profile
+      profile = await Profile.create({
+        ...data,
+        user: session.user.id,
+      });
+    }
 
-export async function PUT(req: NextRequest) {
-  await connectDB()
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (!token || !token.sub) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+    // Update user's hasProfile field
+    await User.findByIdAndUpdate(session.user.id, { 
+      hasProfile: true 
+    });
 
-  const body = await req.json()
-  // Update profile user
-  const profile = await Profile.findOneAndUpdate(
-    { user: token.sub },
-    { $set: body },
-    { new: true }
-  )
-  if (!profile) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+    return NextResponse.json({ 
+      success: true, 
+      profile,
+      message: "Profile berhasil disimpan" 
+    });
+  } catch (error) {
+    console.error("Error saving profile:", error);
+    return NextResponse.json({ 
+      error: "Internal server error" 
+    }, { status: 500 });
   }
-  return NextResponse.json(profile)
 }
