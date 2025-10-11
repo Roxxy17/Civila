@@ -72,3 +72,32 @@ export async function POST(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
+// ...existing code...
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const data = await request.json();
+    await connectDB();
+
+    // Update existing profile or create jika belum ada
+    const profile = await Profile.findOneAndUpdate(
+      { user: session.user.id },
+      { ...data, updatedAt: new Date() },
+      { new: true, upsert: true }
+    );
+
+    // Pastikan flag hasProfile di user terset
+    await User.findByIdAndUpdate(session.user.id, { hasProfile: true });
+
+    return NextResponse.json({ success: true, profile, message: "Profile berhasil diupdate" });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+// ...existing code...
