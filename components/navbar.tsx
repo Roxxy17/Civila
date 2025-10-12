@@ -181,7 +181,11 @@ export function Navbar({ currentPage, onNavigate }: SiteHeaderProps) {
                 <img
                   src="/civilafontLM.png"
                   alt="Civila"
-                  className="h-6 group-hover:scale-105 transition-transform duration-300 filter drop-shadow-sm brightness-0 saturate-100 dark:hue-rotate-[280deg] hue-rotate-[220deg] dark:brightness-100"
+                  className={`h-6 group-hover:scale-105 transition-transform duration-300 filter drop-shadow-sm ${
+                    isScrolled
+                      ? "brightness-0 invert" // Putih when scrolled
+                      : "brightness-0 saturate-100 hue-rotate-[220deg]" // Blue when not scrolled
+                  }`}
                 />
                 <Badge
                   variant="secondary"
