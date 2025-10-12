@@ -163,10 +163,10 @@ export function Sidebar({
         </nav>
 
         {/* Footer */}
-        {isExpanded && (
+           {isExpanded && (
           <div className="p-4 border-t border-white/10 text-xs text-slate-400 text-center font-serif">
-            <div className="font-medium">Real-time space debris monitoring</div>
-            <div className="mt-1 opacity-75">Data from NASA • ESA • Celestrak</div>
+            <div className="font-medium">AI-powered career guidance platform</div>
+            <div className="mt-1 opacity-75">Civila © 2024 • Transform your career</div>
           </div>
         )}
       </div>
