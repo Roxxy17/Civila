@@ -166,7 +166,7 @@ export function Sidebar({
            {isExpanded && (
           <div className="p-4 border-t border-white/10 text-xs text-slate-400 text-center font-serif">
             <div className="font-medium">AI-powered career guidance platform</div>
-            <div className="mt-1 opacity-75">Civila © 2024 • Transform your career</div>
+            <div className="mt-1 opacity-75">Civila © 2025 • Transform your career</div>
           </div>
         )}
       </div>
