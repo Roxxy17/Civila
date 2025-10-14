@@ -510,20 +510,6 @@ export default function DashboardPage() {
                   </Card>
                 </div>
               </div>
-
-              {/* Logout Section */}
-              <Card className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">Session Management</h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">Kelola sesi login Anda</p>
-                  </div>
-                  <Button onClick={handleLogout} variant="outline" className="rounded-xl">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Keluar
-                  </Button>
-                </div>
-              </Card>
             </div>
           </div>
         </div>
