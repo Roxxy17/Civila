@@ -23,6 +23,8 @@ import {
   Share2,
   Filter,
   Search,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { FloatingCard } from "@/components/floating-card";
 import { GradientText } from "@/components/gradient-text";
@@ -42,26 +44,28 @@ function CareerPickButton({
   careerName,
   assessmentResultId,
   isPicked,
-  onPickSuccess, // Tambahkan callback
+  onPickSuccess,
 }: {
   careerName: string;
   assessmentResultId: string;
   isPicked?: boolean;
-  onPickSuccess?: (careerName: string, assessmentResultId: string) => void; // Tambahkan prop
+  onPickSuccess?: (careerName: string, assessmentResultId: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(isPicked ?? false);
   const [error, setError] = useState("");
 
-  // Update success state ketika isPicked berubah
+  // Update success state ketika isPicked berubah dari parent
   useEffect(() => {
     setSuccess(isPicked ?? false);
   }, [isPicked]);
 
   const handlePick = async () => {
+    if (success || isPicked) return; // Prevent double picking
+
     setLoading(true);
     setError("");
-    setSuccess(false);
+
     try {
       const res = await fetch("/api/CareerRecommendation", {
         method: "POST",
@@ -71,20 +75,38 @@ function CareerPickButton({
           assessmentResultId,
         }),
       });
+
       const data = await res.json();
+
       if (res.ok && data.success) {
         setSuccess(true);
+        setError("");
         // Panggil callback untuk update parent state
-        onPickSuccess?.(careerName, assessmentResultId);
+        if (onPickSuccess) {
+          onPickSuccess(careerName, assessmentResultId);
+        }
+
+        // Optional: Show success message
+        console.log("✅ Karier berhasil dipilih:", careerName);
       } else {
         setError(data.error || "Gagal memilih karier");
+        setSuccess(false);
       }
     } catch (err) {
+      console.error("❌ Error picking career:", err);
       setError("Gagal memilih karier");
+      setSuccess(false);
     } finally {
       setLoading(false);
     }
   };
+
+  const isDisabled = loading || success || isPicked;
+  const buttonText = loading
+    ? "Memproses..."
+    : success || isPicked
+    ? "✓ Sudah Dipilih"
+    : "Pilih Karier";
 
   return (
     <div className="p-4 rounded-xl bg-background border border-border hover:border-primary/30 transition-colors group flex items-center gap-4">
@@ -101,27 +123,48 @@ function CareerPickButton({
             Rekomendasi tinggi
           </span>
         </div>
+
+        {/* Status messages */}
         {(success || isPicked) && (
-          <span className="text-xs text-green-600 block mt-1">
-            Karier sudah dipilih!
-          </span>
+          <div className="flex items-center gap-1 mt-1">
+            <CheckCircle className="w-3 h-3 text-green-500" />
+            <span className="text-xs text-green-600 font-medium">
+              Karier sudah dipilih!
+              <button
+                className="text-blue-600 underline ml-1 hover:text-blue-700"
+                onClick={() => (window.location.href = "/career-mapper")}
+              >
+                Lihat detail &rarr;
+              </button>
+            </span>
+          </div>
         )}
+
         {error && (
-          <span className="text-xs text-red-600 block mt-1">{error}</span>
+          <div className="flex items-center gap-1 mt-1">
+            <AlertCircle className="w-3 h-3 text-red-500" />
+            <span className="text-xs text-red-600">{error}</span>
+          </div>
         )}
       </div>
+
       <Button
         size="sm"
-        className="ml-2"
-        disabled={loading || success || isPicked}
+        className={`ml-2 transition-all ${
+          isDisabled
+            ? "opacity-75 cursor-not-allowed"
+            : "hover:scale-105 hover:shadow-md"
+        } ${
+          (success || isPicked)
+            ? "bg-green-500 hover:bg-green-600 text-white"
+            : ""
+        }`}
+        disabled={isDisabled}
         onClick={handlePick}
       >
-        {loading
-          ? "Memproses..."
-          : success || isPicked
-          ? "Sudah Dipilih"
-          : "Pilih Karier"}
-        <ChevronRight className="w-4 h-4 ml-1" />
+        {loading && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+        {buttonText}
+        {!isDisabled && <ChevronRight className="w-4 h-4 ml-1" />}
       </Button>
     </div>
   );
@@ -168,15 +211,26 @@ function ResultsContent() {
       if (res.ok) {
         const data = await res.json();
         const map: { [key: string]: boolean } = {};
-        data.recommendations.forEach((rec: any) => {
+
+        // Buat mapping berdasarkan assessmentResult ID dan careerName
+        data.recommendations?.forEach((rec: any) => {
           if (rec.isPicked && rec.assessmentResult && rec.careerName) {
-            map[`${rec.assessmentResult}_${rec.careerName}`] = true;
+            // Gunakan assessmentResult._id jika populate, atau assessmentResult jika ObjectId
+            const assessmentId =
+              typeof rec.assessmentResult === "object"
+                ? rec.assessmentResult._id
+                : rec.assessmentResult;
+            const key = `${assessmentId}_${rec.careerName}`;
+            map[key] = true;
+            console.log("✅ Found picked career:", key);
           }
         });
+
         setPickedCareers(map);
+        console.log("📊 Total picked careers:", Object.keys(map).length);
       }
     } catch (error) {
-      console.error("Error fetching picked careers:", error);
+      console.error("❌ Error fetching picked careers:", error);
     }
   }, []);
 
@@ -188,13 +242,25 @@ function ResultsContent() {
   }, [mounted, results.length, fetchPickedCareers]);
 
   // Handle success pick career
-  const handlePickSuccess = useCallback((careerName: string, assessmentResultId: string) => {
-    const key = `${assessmentResultId}_${careerName}`;
-    setPickedCareers(prev => ({
-      ...prev,
-      [key]: true
-    }));
-  }, []);
+  const handlePickSuccess = useCallback(
+    (careerName: string, assessmentResultId: string) => {
+      const key = `${assessmentResultId}_${careerName}`;
+      setPickedCareers((prev) => {
+        const updated = {
+          ...prev,
+          [key]: true,
+        };
+        console.log("✅ Updated picked careers:", key);
+        return updated;
+      });
+
+      // Refetch untuk memastikan data sync
+      setTimeout(() => {
+        fetchPickedCareers();
+      }, 1000);
+    },
+    [fetchPickedCareers]
+  );
 
   // Handle hydration
   useEffect(() => {
@@ -918,19 +984,22 @@ function ResultsContent() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {selectedResult.recommendedCareers.map(
-                            (rec: any, idx: number) => (
-                              <CareerPickButton
-                                key={`recommendation-${idx}-${rec.careerName}`}
-                                careerName={rec.careerName}
-                                assessmentResultId={selectedResult.parentId}
-                                isPicked={
-                                  pickedCareers[
-                                    `${selectedResult.parentId}_${rec.careerName}`
-                                  ]
-                                }
-                                onPickSuccess={handlePickSuccess} // Tambahkan callback
-                              />
-                            )
+                            (rec: any, idx: number) => {
+                              // Get the correct assessment ID for checking picked status
+                              const assessmentId = selectedResult.parentId || selectedResult._id;
+                              const pickedKey = `${assessmentId}_${rec.careerName}`;
+                              const isAlreadyPicked = pickedCareers[pickedKey] || false;
+                              
+                              return (
+                                <CareerPickButton
+                                  key={`recommendation-${idx}-${rec.careerName}-${assessmentId}`}
+                                  careerName={rec.careerName}
+                                  assessmentResultId={assessmentId}
+                                  isPicked={isAlreadyPicked}
+                                  onPickSuccess={handlePickSuccess}
+                                />
+                              );
+                            }
                           )}
                         </div>
                       </div>

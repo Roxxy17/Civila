@@ -291,7 +291,7 @@ export default function ProfileSetupPage() {
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="interests" className="text-base font-medium flex items-center gap-2 text-foreground">
+              <Label htmlFor="interests" className="text-base font-normal flex items-center gap-2 text-foreground">
                 <Sparkles className="w-4 h-4" />
                 Minat & Hobi Lainnya
               </Label>

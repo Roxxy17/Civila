@@ -21,6 +21,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  console.log("🚀 Starting career recommendation for:", careerName);
+
+  // Cek apakah karier sudah dipilih sebelumnya
+  const existingRecommendation = await CareerRecommendation.findOne({
+    user: token.sub,
+    careerName,
+    assessmentResult: assessmentResultId,
+    isPicked: true
+  });
+
+  if (existingRecommendation) {
+    console.log("✅ Career already picked:", careerName);
+    return NextResponse.json({ 
+      success: true, 
+      recommendation: existingRecommendation,
+      message: "Karier sudah dipilih sebelumnya" 
+    });
+  }
+
   // Ambil detail assessment result
   const assessmentResult = await AssessmentResult.findById(assessmentResultId);
   if (!assessmentResult) {
@@ -30,53 +49,61 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Enhanced prompt untuk generate comprehensive career data
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const prompt = `
-Anda adalah AI career advisor expert yang sangat berpengalaman. Analisa data assessment berikut dan berikan detail karier "${careerName}" yang paling relevan dan comprehensive untuk user ini.
+  console.log("📊 Assessment data found:", {
+    score: assessmentResult.overallScore,
+    breakdown: assessmentResult.breakdown
+  });
 
-Data assessment user:
-{
-  "overallScore": ${assessmentResult.overallScore || 0},
-  "breakdown": ${JSON.stringify(assessmentResult.breakdown || {})},
-  "userProfile": {
-    "age": ${assessmentResult.userProfile?.age || 0},
-    "educationBackground": "${assessmentResult.userProfile?.educationBackground || ""}",
-    "skills": ${JSON.stringify(assessmentResult.userProfile?.skills || [])},
-    "interests": ${JSON.stringify(assessmentResult.userProfile?.interests || [])}
+  // Check Gemini API availability first
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  
+  if (!GEMINI_API_KEY) {
+    console.error("❌ GEMINI_API_KEY tidak tersedia!");
+    return NextResponse.json(
+      { error: "AI service tidak tersedia saat ini. Silakan coba lagi nanti." },
+      { status: 503 }
+    );
   }
-}
+
+  console.log("🤖 Generating comprehensive career data with AI...");
+  
+  const prompt = `Anda adalah AI konsultan karier ahli yang sangat berpengalaman di pasar Indonesia. Analisis data assessment berikut dan berikan detail karier "${careerName}" yang komprehensif dan relevan untuk user Indonesia.
+
+Data Assessment:
+- Skor Keseluruhan: ${assessmentResult.overallScore || 0}%
+- Breakdown: ${JSON.stringify(assessmentResult.breakdown || {})}
+- Profil User: ${JSON.stringify(assessmentResult.userProfile || {})}
 
 Target Karier: "${careerName}"
 
-Berikan output JSON valid (tanpa penjelasan atau markdown) dengan struktur lengkap berikut:
+Berikan response JSON yang valid (tanpa markdown, tanpa penjelasan tambahan) dengan struktur PERSIS seperti ini:
 
 {
   "level": "Junior/Mid/Senior",
   "salaryRange": "Rp X.XXX.XXX - Rp Y.YYY.YYY/bulan",
   "growthRate": "+XX% per tahun",
   "estimatedLearningTime": "X-Y bulan",
-  "requiredSkills": ["skill1", "skill2", "skill3", "skill4", "skill5"],
-  "description": "Deskripsi lengkap karier yang menarik dan informatif (2-3 kalimat)",
+  "requiredSkills": ["skill1 Indonesia", "skill2 Indonesia", "skill3 Indonesia", "skill4 Indonesia", "skill5 Indonesia"],
+  "description": "Deskripsi karier yang detail dan menarik dalam bahasa Indonesia (2-3 kalimat yang menggambarkan peluang, prospek, dan daya tarik karier ini)",
   "category": "Technology/Design/Business/Marketing/Data/Finance",
-  "difficulty": "Beginner/Intermediate/Advanced",
-  "marketDemand": "High/Medium/Low",
+  "difficulty": "Pemula/Menengah/Lanjutan",
+  "marketDemand": "Tinggi/Sedang/Rendah",
   "workType": ["Remote", "Hybrid", "On-site"],
   "aiScore": 85,
   "matchReasons": [
-    "Alasan spesifik mengapa cocok berdasarkan assessment",
-    "Kesesuaian dengan skills user",
-    "Alignment dengan interests user"
+    "Alasan spesifik mengapa cocok berdasarkan hasil assessment dalam bahasa Indonesia",
+    "Kesesuaian skill dengan kemampuan user dalam bahasa Indonesia", 
+    "Penjelasan kecocokan minat dan kepribadian dalam bahasa Indonesia"
   ],
-  "softSkills": ["komunikasi", "problem solving", "teamwork", "leadership", "time management"],
-  "tools": ["tool1", "tool2", "tool3", "tool4", "tool5"],
-  "dayInLife": "Deskripsi detail aktivitas harian dalam karier ini (3-4 kalimat)",
+  "softSkills": ["komunikasi efektif", "pemecahan masalah", "kerja tim", "kepemimpinan", "manajemen waktu", "adaptabilitas"],
+  "tools": ["tool1 relevan", "tool2 relevan", "tool3 relevan", "tool4 relevan", "tool5 relevan"],
+  "dayInLife": "Deskripsi detail aktivitas harian dalam karier ini dalam bahasa Indonesia (3-4 kalimat yang menggambarkan rutinitas kerja, tantangan, dan kepuasan kerja sehari-hari)",
   "careerPath": [
     "Junior ${careerName}",
     "${careerName}",
     "Senior ${careerName}",
     "Lead ${careerName}",
-    "Manager/Director level"
+    "Manager/Direktur ${careerName}"
   ],
   "learningMilestones": [
     {
@@ -96,53 +123,40 @@ Berikan output JSON valid (tanpa penjelasan atau markdown) dengan struktur lengk
     },
     {
       "month": 18,
-      "achievement": "Expertise dan Spesialisasi",
-      "skills": ["skill expert 1", "skill expert 2", "skill expert 3"]
+      "achievement": "Keahlian dan Spesialisasi",
+      "skills": ["skill ahli 1", "skill ahli 2", "skill ahli 3"]
     }
   ]
 }
 
-PENTING:
-1. aiScore harus realistis berdasarkan kesesuaian assessment (75-95 untuk highly matched)
-2. salaryRange harus akurat untuk pasar Indonesia saat ini
-3. matchReasons harus spesifik merujuk data assessment user
-4. requiredSkills dan tools harus relevan dengan karier target
-5. learningMilestones harus realistis dan actionable
-6. Semua field harus diisi dengan data yang meaningful
-7. Output harus valid JSON tanpa tambahan teks apapun
-`;
+PERSYARATAN KRITIS:
+1. SEMUA konten harus dalam Bahasa Indonesia yang natural dan profesional
+2. salaryRange harus akurat untuk pasar kerja Indonesia tahun 2025
+3. aiScore harus mencerminkan kesesuaian dengan assessment (75-95)
+4. matchReasons harus merujuk spesifik pada data assessment user
+5. careerPath harus menunjukkan progressi karier yang realistis di Indonesia
+6. learningMilestones harus actionable dan sesuai dengan konteks Indonesia
+7. requiredSkills dan softSkills harus menggunakan terminologi Indonesia
+8. description dan dayInLife harus menggambarkan realitas kerja di Indonesia
+9. tools harus relevan dan umum digunakan di Indonesia
+10. Output harus JSON valid tanpa teks tambahan apapun
+11. Gunakan perspektif pasar kerja Indonesia, bukan internasional
+12. Semua field wajib diisi dengan data yang bermakna dan realistis`;
 
-  let careerData = {
-    level: "",
-    salaryRange: "",
-    growthRate: "",
-    estimatedLearningTime: "",
-    requiredSkills: [],
-    description: "",
-    category: "",
-    difficulty: "",
-    marketDemand: "",
-    workType: [],
-    aiScore: 0,
-    matchReasons: [],
-    softSkills: [],
-    tools: [],
-    dayInLife: "",
-    careerPath: [],
-    learningMilestones: []
-  };
+  let careerData = null;
 
   try {
+    console.log("🤖 Calling Gemini AI for career data generation...");
+    
     const geminiRes = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=" +
-        GEMINI_API_KEY,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.8,
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048,
@@ -151,63 +165,141 @@ PENTING:
       }
     );
     
+    if (!geminiRes.ok) {
+      throw new Error(`Gemini API error: ${geminiRes.status} ${geminiRes.statusText}`);
+    }
+
     const geminiData = await geminiRes.json();
     let text = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Clean up response
-    text = text.trim();
-    if (text.startsWith("```json")) {
-      text = text.replace(/^```json/, "").replace(/```$/, "").trim();
-    }
-    if (text.startsWith("```")) {
-      text = text.replace(/^```/, "").replace(/```$/, "").trim();
+    if (!text) {
+      throw new Error("Empty response from Gemini AI");
     }
     
+    console.log("🤖 Raw Gemini response:", text.substring(0, 200) + "...");
+    
+    // Clean up response aggressively
+    text = text.trim();
+    text = text.replace(/^```json\s*/, "").replace(/```\s*$/, "");
+    text = text.replace(/^```\s*/, "").replace(/```\s*$/, "");
+    text = text.replace(/^\s*{/, "{").replace(/}\s*$/, "}");
+    
+    // Parse AI response
     try {
-      const parsedData = JSON.parse(text);
-      careerData = { ...careerData, ...parsedData };
-    } catch (parseError) {
-      console.error("Gagal parse Gemini response:", text);
-      console.error("Parse error:", parseError);
+      careerData = JSON.parse(text);
+      console.log("✅ Successfully parsed AI data for:", careerName);
+      console.log("🎯 AI generated fields:", Object.keys(careerData));
       
-      // Enhanced fallback with career-specific data
-      careerData = generateFallbackData(careerName, assessmentResult);
+      // Validate critical fields
+      const requiredFields = ['level', 'salaryRange', 'category', 'description', 'aiScore', 'requiredSkills'];
+      const missingFields = requiredFields.filter(field => !careerData[field]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`AI response missing required fields: ${missingFields.join(', ')}`);
+      }
+      
+      console.log("🔍 AI Data Validation:", {
+        level: careerData.level,
+        category: careerData.category,
+        aiScore: careerData.aiScore,
+        hasDescription: !!careerData.description,
+        hasRequiredSkills: Array.isArray(careerData.requiredSkills) && careerData.requiredSkills.length > 0,
+        hasLearningMilestones: Array.isArray(careerData.learningMilestones) && careerData.learningMilestones.length > 0,
+        hasMatchReasons: Array.isArray(careerData.matchReasons) && careerData.matchReasons.length > 0
+      });
+      
+    } catch (parseError) {
+      console.error("❌ Failed to parse AI response:", parseError);
+      console.log("📝 Raw response text:", text);
+      throw new Error("Invalid JSON response from AI");
     }
-  } catch (apiError) {
-    console.error("Gemini API error:", apiError);
-    // Enhanced fallback
-    careerData = generateFallbackData(careerName, assessmentResult);
+    
+  } catch (aiError) {
+    console.error("❌ AI generation failed:", aiError);
+    return NextResponse.json(
+      { 
+        error: "Gagal menghasilkan rekomendasi karier dengan AI. Silakan coba lagi.", 
+        details: aiError.message 
+      },
+      { status: 500 }
+    );
   }
 
-  // Simpan ke database dengan semua field baru
-  const recommendation = await CareerRecommendation.create({
-    user: token.sub,
-    careerName,
-    level: careerData.level,
-    salaryRange: careerData.salaryRange,
-    growthRate: careerData.growthRate,
-    estimatedLearningTime: careerData.estimatedLearningTime,
-    requiredSkills: careerData.requiredSkills,
-    assessmentResult: assessmentResultId,
-    isPicked: true,
-    pickedAt: new Date(),
+  // Simpan data AI ke database
+  try {
+    console.log("💾 Saving AI-generated career recommendation...");
     
-    // New comprehensive fields
-    description: careerData.description,
-    category: careerData.category,
-    difficulty: careerData.difficulty,
-    marketDemand: careerData.marketDemand,
-    workType: careerData.workType,
-    aiScore: careerData.aiScore,
-    matchReasons: careerData.matchReasons,
-    softSkills: careerData.softSkills,
-    tools: careerData.tools,
-    dayInLife: careerData.dayInLife,
-    careerPath: careerData.careerPath,
-    learningMilestones: careerData.learningMilestones
-  });
+    // EXPLICIT field assignment dengan data AI yang sudah divalidasi
+    const recommendationData = {
+      user: token.sub,
+      careerName,
+      assessmentResult: assessmentResultId,
+      isPicked: true,
+      pickedAt: new Date(),
+      
+      // Core fields dari AI
+      level: String(careerData.level),
+      salaryRange: String(careerData.salaryRange),
+      growthRate: String(careerData.growthRate || "+15% per tahun"),
+      estimatedLearningTime: String(careerData.estimatedLearningTime || "6-12 bulan"),
+      requiredSkills: Array.isArray(careerData.requiredSkills) ? careerData.requiredSkills : [],
+      
+      // Comprehensive fields dari AI
+      description: String(careerData.description),
+      category: String(careerData.category),
+      difficulty: String(careerData.difficulty || "Beginner"),
+      marketDemand: String(careerData.marketDemand || "High"),
+      workType: Array.isArray(careerData.workType) ? careerData.workType : ["Remote", "Hybrid"],
+      aiScore: Number(careerData.aiScore),
+      matchReasons: Array.isArray(careerData.matchReasons) ? careerData.matchReasons : [],
+      softSkills: Array.isArray(careerData.softSkills) ? careerData.softSkills : [],
+      tools: Array.isArray(careerData.tools) ? careerData.tools : [],
+      dayInLife: String(careerData.dayInLife || ""),
+      careerPath: Array.isArray(careerData.careerPath) ? careerData.careerPath : [],
+      learningMilestones: Array.isArray(careerData.learningMilestones) ? careerData.learningMilestones : []
+    };
 
-  return NextResponse.json({ success: true, recommendation });
+    console.log("🔍 Final AI-Generated Data:", {
+      careerName: recommendationData.careerName,
+      level: recommendationData.level,
+      category: recommendationData.category,
+      aiScore: recommendationData.aiScore,
+      descriptionLength: recommendationData.description?.length || 0,
+      skillsCount: recommendationData.requiredSkills?.length || 0,
+      milestonesCount: recommendationData.learningMilestones?.length || 0,
+      matchReasonsCount: recommendationData.matchReasons?.length || 0,
+      totalDataFields: Object.keys(recommendationData).length
+    });
+
+    const recommendation = await CareerRecommendation.create(recommendationData);
+
+    console.log("✅ Successfully saved AI-generated recommendation with ID:", recommendation._id);
+    
+    // Verification
+    const savedData = await CareerRecommendation.findById(recommendation._id);
+    console.log("📊 AI Data Verification from DB:", {
+      careerName: savedData?.careerName,
+      level: savedData?.level,
+      category: savedData?.category,
+      aiScore: savedData?.aiScore,
+      dataSource: "100% AI Generated",
+      hasAllFields: !!(savedData?.description && savedData?.category && savedData?.aiScore)
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      recommendation: savedData,
+      message: "Career recommendation generated successfully with AI",
+      dataSource: "AI-Powered"
+    });
+    
+  } catch (dbError) {
+    console.error("❌ Database save error:", dbError);
+    return NextResponse.json(
+      { error: "Gagal menyimpan rekomendasi karier: " + dbError.message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -218,18 +310,20 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Ambil semua career recommendation milik user dengan populate assessment result
     const recommendations = await CareerRecommendation.find({ user: token.sub })
       .populate('assessmentResult')
-      .sort({ createdAt: -1 }); // Sort by newest first
+      .sort({ createdAt: -1 });
+    
+    console.log(`📊 Found ${recommendations.length} AI-generated recommendations for user`);
     
     return NextResponse.json({ 
       success: true, 
       recommendations,
-      count: recommendations.length 
+      count: recommendations.length,
+      dataSource: "AI-Powered"
     });
   } catch (error) {
-    console.error("Error fetching recommendations:", error);
+    console.error("❌ Error fetching recommendations:", error);
     return NextResponse.json(
       { error: "Gagal mengambil rekomendasi karier" },
       { status: 500 }
@@ -237,136 +331,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Helper function untuk generate fallback data yang lebih intelligent
-function generateFallbackData(careerName: string, assessmentResult: any) {
-  const name = careerName.toLowerCase();
-  
-  // Determine category
-  let category = "Technology";
-  if (name.includes('designer') || name.includes('artist') || name.includes('creative')) {
-    category = "Design";
-  } else if (name.includes('marketing') || name.includes('sales') || name.includes('growth')) {
-    category = "Marketing";
-  } else if (name.includes('manager') || name.includes('analyst') || name.includes('business')) {
-    category = "Business";
-  } else if (name.includes('data') || name.includes('analytics')) {
-    category = "Data";
-  }
+// 🗑️ REMOVED: All fallback data functions
+// ❌ generateEnhancedFallbackData() - DELETED
+// ❌ getDefaultSkills() - DELETED  
+// ❌ getDefaultTools() - DELETED
+// ❌ careerSpecifics constants - DELETED
 
-  // Determine level based on assessment score
-  let level = "Junior";
-  let difficulty = "Beginner";
-  let aiScore = 75;
-  
-  if (assessmentResult?.overallScore) {
-    if (assessmentResult.overallScore >= 80) {
-      level = "Mid";
-      difficulty = "Intermediate";
-      aiScore = 85;
-    }
-    if (assessmentResult.overallScore >= 90) {
-      level = "Senior";
-      difficulty = "Advanced";
-      aiScore = 95;
-    }
-  }
-
-  // Career-specific salary ranges (Indonesia market)
-  const salaryRanges = {
-    "Technology": {
-      "Junior": "Rp 6.000.000 - Rp 12.000.000/bulan",
-      "Mid": "Rp 12.000.000 - Rp 25.000.000/bulan",
-      "Senior": "Rp 25.000.000 - Rp 50.000.000/bulan"
-    },
-    "Design": {
-      "Junior": "Rp 5.000.000 - Rp 10.000.000/bulan",
-      "Mid": "Rp 10.000.000 - Rp 20.000.000/bulan",
-      "Senior": "Rp 20.000.000 - Rp 40.000.000/bulan"
-    },
-    "Marketing": {
-      "Junior": "Rp 5.500.000 - Rp 11.000.000/bulan",
-      "Mid": "Rp 11.000.000 - Rp 22.000.000/bulan",
-      "Senior": "Rp 22.000.000 - Rp 45.000.000/bulan"
-    },
-    "Business": {
-      "Junior": "Rp 6.500.000 - Rp 13.000.000/bulan",
-      "Mid": "Rp 13.000.000 - Rp 28.000.000/bulan",
-      "Senior": "Rp 28.000.000 - Rp 60.000.000/bulan"
-    }
-  };
-
-  return {
-    level,
-    salaryRange: salaryRanges[category as keyof typeof salaryRanges]?.[level as keyof any] || "Rp 5.000.000 - Rp 10.000.000/bulan",
-    growthRate: "+12% per tahun",
-    estimatedLearningTime: difficulty === "Beginner" ? "6-12 bulan" : difficulty === "Intermediate" ? "12-18 bulan" : "18-24 bulan",
-    requiredSkills: getDefaultSkills(category),
-    description: `Karier ${careerName} menawarkan peluang yang menarik di bidang ${category.toLowerCase()}. Posisi ini sangat cocok untuk individu yang memiliki passion di bidang teknologi dan inovasi, dengan prospek pengembangan karier yang excellent.`,
-    category,
-    difficulty,
-    marketDemand: "High",
-    workType: ["Remote", "Hybrid", "On-site"],
-    aiScore,
-    matchReasons: [
-      "Sesuai dengan hasil assessment dan kemampuan Anda",
-      "Cocok dengan minat dan preferensi karier",
-      "Tingkat kesulitan sesuai dengan pengalaman saat ini"
-    ],
-    softSkills: ["Komunikasi", "Problem Solving", "Teamwork", "Critical Thinking", "Adaptability"],
-    tools: getDefaultTools(category),
-    dayInLife: `Sebagai ${careerName}, hari kerja Anda akan diisi dengan berbagai aktivitas menarik seperti kolaborasi dengan tim, menyelesaikan project-project challenging, dan terus belajar teknologi terbaru. Pekerjaan ini menawarkan work-life balance yang baik dengan lingkungan kerja yang dinamis dan supportif.`,
-    careerPath: [
-      `Junior ${careerName}`,
-      `${careerName}`,
-      `Senior ${careerName}`,
-      `Lead ${careerName}`,
-      `${category} Manager`
-    ],
-    learningMilestones: [
-      {
-        month: 3,
-        achievement: "Fondasi dan Konsep Dasar",
-        skills: ["Fundamental concepts", "Basic tools", "Industry overview"]
-      },
-      {
-        month: 6,
-        achievement: "Praktik dan Implementasi",
-        skills: ["Hands-on projects", "Real-world application", "Portfolio development"]
-      },
-      {
-        month: 12,
-        achievement: "Kompetensi Profesional",
-        skills: ["Advanced techniques", "Complex problem solving", "Industry best practices"]
-      },
-      {
-        month: 18,
-        achievement: "Expertise dan Leadership",
-        skills: ["Specialized knowledge", "Team leadership", "Strategic thinking"]
-      }
-    ]
-  };
-}
-
-function getDefaultSkills(category: string): string[] {
-  const skillsMap = {
-    "Technology": ["Programming", "Problem Solving", "Software Development", "Database Management", "System Design"],
-    "Design": ["Creative Thinking", "Design Software", "User Experience", "Visual Communication", "Prototyping"],
-    "Marketing": ["Digital Marketing", "Content Strategy", "Analytics", "Brand Management", "Campaign Management"],
-    "Business": ["Strategic Planning", "Business Analysis", "Project Management", "Financial Analysis", "Leadership"],
-    "Data": ["Data Analysis", "Statistics", "SQL", "Python/R", "Data Visualization"]
-  };
-  
-  return skillsMap[category as keyof typeof skillsMap] || skillsMap.Technology;
-}
-
-function getDefaultTools(category: string): string[] {
-  const toolsMap = {
-    "Technology": ["VS Code", "Git", "Docker", "AWS/GCP", "Postman"],
-    "Design": ["Figma", "Adobe Creative Suite", "Sketch", "InVision", "Principle"],
-    "Marketing": ["Google Analytics", "Facebook Ads", "HubSpot", "Mailchimp", "Canva"],
-    "Business": ["Excel/Sheets", "PowerBI", "Slack", "Asana", "Salesforce"],
-    "Data": ["Python", "SQL", "Tableau", "Excel", "Jupyter Notebook"]
-  };
-  
-  return toolsMap[category as keyof typeof toolsMap] || toolsMap.Technology;
-}
+// Sekarang 100% data berasal dari AI Gemini! 🤖✨

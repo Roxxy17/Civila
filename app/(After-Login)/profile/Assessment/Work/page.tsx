@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { CheckCircle, Brain, Clock, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import AssessmentResultModal from "@/components/AssessmentResultModal"; // Buat komponen modal hasil assessment
+import AssessmentResultModal from "@/components/AssessmentResultModal"
 
 export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?: () => void, isOpen?: boolean }) {
   const [questions, setQuestions] = useState<any[]>([])
@@ -23,8 +23,8 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
   const [timeLeft, setTimeLeft] = useState(900) // 15 minutes
   const router = useRouter()
   const [processingResult, setProcessingResult] = useState(false)
-  const [showResultModal, setShowResultModal] = useState(false);
-  const [latestResult, setLatestResult] = useState<any>(null);
+  const [showResultModal, setShowResultModal] = useState(false)
+  const [latestResult, setLatestResult] = useState<any>(null)
 
   // Ambil soal dari backend (GET)
   useEffect(() => {
@@ -52,7 +52,6 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
       const timer = setInterval(() => setTimeLeft(t => t - 1), 1000)
       return () => clearInterval(timer)
     } else if (timeLeft === 0 && !isCompleted) {
-      // Auto submit when time runs out
       handleTimeUp()
     }
   }, [loading, isCompleted, timeLeft])
@@ -77,47 +76,46 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
       }))
     }
 
-      try {
-        setProcessingResult(true)
-        const res = await fetch("/api/Assesment/Answer", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        })
-        if (res.ok) {
-          const data = await res.json()
-          const answerId = data._id || data.id || data.answerId
-          if (answerId) {
-            const resultRes = await fetch("/api/Assesment/Result", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ assessmentAnswerId: answerId })
-            })
-            if (resultRes.ok) {
-              // Ambil hasil assessment terbaru
-              const latestRes = await fetch("/api/Assesment/Result?latest=true");
-              const latestData = await latestRes.json();
-              if (latestData.results && latestData.results.length > 0) {
-                setLatestResult(latestData.results[latestData.results.length - 1]);
-                setShowResultModal(true);
-                setProcessingResult(false); // <-- pastikan ini dipanggil di sini!
-                setIsCompleted(false);      // <-- pastikan ini juga!
-              }
-              if (onComplete) onComplete();
-            } else {
-              setProcessingResult(false);
+    try {
+      setProcessingResult(true)
+      const res = await fetch("/api/Assesment/Answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const answerId = data._id || data.id || data.answerId
+        if (answerId) {
+          const resultRes = await fetch("/api/Assesment/Result", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assessmentAnswerId: answerId })
+          })
+          if (resultRes.ok) {
+            const latestRes = await fetch("/api/Assesment/Result?latest=true")
+            const latestData = await latestRes.json()
+            if (latestData.results && latestData.results.length > 0) {
+              setLatestResult(latestData.results[latestData.results.length - 1])
+              setShowResultModal(true)
+              setProcessingResult(false)
+              setIsCompleted(false)
             }
+            if (onComplete) onComplete()
           } else {
-            setProcessingResult(false);
+            setProcessingResult(false)
           }
         } else {
-          setProcessingResult(false);
+          setProcessingResult(false)
         }
-      } catch (err) {
+      } else {
         setProcessingResult(false)
-        console.error("Error submitting answers:", err)
       }
+    } catch (err) {
+      setProcessingResult(false)
+      console.error("Error submitting answers:", err)
     }
+  }
 
   const handleNext = async () => {
     if (selectedAnswer !== null) {
@@ -147,27 +145,28 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
 
   const progress = questions.length ? ((currentQuestion + 1) / questions.length) * 100 : 0
   const timeProgress = (timeLeft / 900) * 100
-  const isTimeWarning = timeLeft < 300 // Warning when < 5 minutes
+  const isTimeWarning = timeLeft < 300
 
+  // Loading State - Mobile Optimized
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animated-bg">
-        <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md pointer-events-none" />
-        <div className="relative z-10 w-full max-w-md pointer-events-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animated-bg overflow-y-auto">
+        <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md" />
+        <div className="relative z-10 w-full max-w-sm sm:max-w-md pointer-events-auto my-auto">
           <FloatingCard className="bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 shadow-2xl">
-            <div className="p-8 text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto pulse-glow shadow-lg">
-                <Brain className="w-10 h-10 text-white animate-pulse" />
+            <div className="p-4 sm:p-8 text-center space-y-4 sm:space-y-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto pulse-glow shadow-lg">
+                <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
               </div>
-              <div className="space-y-3">
-                <h2 className="text-2xl font-bold text-foreground">
+              <div className="space-y-2 sm:space-y-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                   <GradientText>Memuat Assessment...</GradientText>
                 </h2>
-                <p className="text-muted-foreground text-base leading-relaxed">
+                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed px-2">
                   Sistem sedang menyiapkan soal assessment yang dipersonalisasi untuk Anda
                 </p>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full loading-shimmer"></div>
                 </div>
@@ -182,21 +181,22 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
     )
   }
 
+  // No Questions State - Mobile Optimized
   if (!questions.length) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animated-bg">
-        <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md pointer-events-none" />
-        <div className="relative z-10 w-full max-w-md pointer-events-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animated-bg overflow-y-auto">
+        <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md" />
+        <div className="relative z-10 w-full max-w-sm sm:max-w-md pointer-events-auto my-auto">
           <FloatingCard className="bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 shadow-2xl">
-            <div className="p-8 text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                <AlertCircle className="w-10 h-10 text-white" />
+            <div className="p-4 sm:p-8 text-center space-y-4 sm:space-y-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <div className="space-y-3">
-                <h2 className="text-2xl font-bold text-foreground">
+              <div className="space-y-2 sm:space-y-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                   <GradientText>Soal Tidak Tersedia</GradientText>
                 </h2>
-                <p className="text-muted-foreground text-base leading-relaxed">
+                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed px-2">
                   Tidak ada soal assessment yang tersedia saat ini. Silakan coba lagi nanti atau hubungi administrator.
                 </p>
               </div>
@@ -214,39 +214,38 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
     )
   }
 
+  // Completed State - Mobile Optimized
   if ((isCompleted || processingResult) && !showResultModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animated-bg">
-        <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md pointer-events-none" />
-        <div className="relative z-10 w-full max-w-lg pointer-events-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animated-bg overflow-y-auto">
+        <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md" />
+        <div className="relative z-10 w-full max-w-sm sm:max-w-lg pointer-events-auto my-auto">
           <FloatingCard className="bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 shadow-2xl">
-            <div className="p-8 text-center space-y-6">
+            <div className="p-4 sm:p-8 text-center space-y-4 sm:space-y-6">
               {/* Success Animation */}
               <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 dark:from-green-400 dark:to-green-500 rounded-2xl flex items-center justify-center mx-auto pulse-glow shadow-lg animate-in zoom-in duration-500">
-                  <CheckCircle2 className="w-12 h-12 text-white animate-in zoom-in duration-700 delay-200" />
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-green-500 to-green-600 dark:from-green-400 dark:to-green-500 rounded-2xl flex items-center justify-center mx-auto pulse-glow shadow-lg animate-in zoom-in duration-500">
+                  <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-white animate-in zoom-in duration-700 delay-200" />
                 </div>
                 
-                {/* Success Particles Effect */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-28 h-28 border-2 border-green-400/30 rounded-full animate-ping"></div>
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 border-2 border-green-400/30 rounded-full animate-ping"></div>
                 </div>
               </div>
 
-              <div className="space-y-3 animate-in slide-in-from-bottom duration-500 delay-300">
-                <h2 className="text-3xl font-bold text-foreground">
+              <div className="space-y-2 sm:space-y-3 animate-in slide-in-from-bottom duration-500 delay-300">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                   <GradientText>Assessment Selesai!</GradientText>
                 </h2>
-                <p className="text-muted-foreground text-base leading-relaxed max-w-md mx-auto">
+                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-md mx-auto px-2">
                   {processingResult
                     ? "Sistem sedang menganalisis jawaban Anda dengan AI untuk memberikan rekomendasi karier yang akurat..."
                     : "Terima kasih! Hasil assessment Anda sedang diproses untuk memberikan insight karier yang mendalam."}
                 </p>
               </div>
 
-              {/* Processing Animation */}
-              <div className="space-y-4 animate-in slide-in-from-bottom duration-500 delay-500">
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div className="space-y-3 sm:space-y-4 animate-in slide-in-from-bottom duration-500 delay-500">
+                <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Menganalisis hasil dengan AI...</span>
                 </div>
@@ -255,13 +254,12 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
                 </div>
               </div>
 
-              {/* Stats Summary */}
-              <div className="bg-muted/30 dark:bg-muted/20 rounded-xl p-4 space-y-3 animate-in slide-in-from-bottom duration-500 delay-700">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <div className="bg-muted/30 dark:bg-muted/20 rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3 animate-in slide-in-from-bottom duration-500 delay-700">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground">
                   <Brain className="w-4 h-4 text-primary" />
                   <span>Assessment Summary:</span>
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-3 h-3 text-green-500" />
                     <span>{questions.length} Soal Dijawab</span>
@@ -273,7 +271,7 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground/70 animate-in fade-in duration-500 delay-1000">
+              <p className="text-xs text-muted-foreground/70 animate-in fade-in duration-500 delay-1000 px-2">
                 🔄 Anda akan diarahkan ke halaman hasil secara otomatis
               </p>
             </div>
@@ -286,72 +284,67 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
   const q = questions[currentQuestion]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animated-bg">
-      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md pointer-events-none" />
-      <div className="relative z-10 w-full max-w-4xl pointer-events-auto">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-6 animated-bg overflow-y-auto">
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-md" />
+      <div className="relative z-10 w-full max-w-sm sm:max-w-2xl lg:max-w-4xl pointer-events-auto my-4 sm:my-auto">
         <FloatingCard className="bg-background/95 dark:bg-background/90 backdrop-blur-xl border border-border/50 shadow-2xl">
-          <div className="p-8">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 pulse-glow shadow-lg">
-                <Brain className="w-8 h-8 text-white" />
+          <div className="p-4 sm:p-6 lg:p-8 max-h-[95vh] overflow-y-auto">
+            {/* Header - Mobile Optimized */}
+            <div className="text-center mb-4 sm:mb-6 lg:mb-8">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 pulse-glow shadow-lg">
+                <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-foreground">
+              <h2 className="text-xl sm:text-2xl font-bold mb-2 text-foreground">
                 <GradientText>Assessment Karier</GradientText>
               </h2>
-              <p className="text-muted-foreground text-base">
+              <p className="text-muted-foreground text-sm sm:text-base px-2">
                 Jawab pertanyaan berikut untuk mendapatkan rekomendasi karier yang akurat
               </p>
             </div>
 
-            {/* Progress & Timer */}
-            <div className="mb-8 space-y-4">
-              {/* Question Progress */}
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-foreground">
+            {/* Progress & Timer - Mobile Optimized */}
+            <div className="mb-4 sm:mb-6 lg:mb-8 space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <span className="text-xs sm:text-sm font-medium text-foreground text-center sm:text-left">
                   Pertanyaan {currentQuestion + 1} dari {questions.length}
                 </span>
-                <div className={`flex items-center text-sm font-medium ${isTimeWarning ? 'text-red-500' : 'text-muted-foreground'}`}>
+                <div className={`flex items-center justify-center sm:justify-end text-xs sm:text-sm font-medium ${isTimeWarning ? 'text-red-500' : 'text-muted-foreground'}`}>
                   <Clock className="w-4 h-4 mr-2" />
                   {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
                 </div>
               </div>
-              <Progress value={progress} className="h-3" />
+              <Progress value={progress} className="h-2 sm:h-3" />
               
-              {/* Time Progress */}
               {isTimeWarning && (
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-red-500 font-medium">⚠️ Waktu hampir habis!</span>
-                    <span className="text-red-500">{Math.floor(timeProgress)}% tersisa</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 text-xs">
+                    <span className="text-red-500 font-medium text-center sm:text-left">⚠️ Waktu hampir habis!</span>
+                    <span className="text-red-500 text-center sm:text-right">{Math.floor(timeProgress)}% tersisa</span>
                   </div>
                   <Progress value={timeProgress} className="h-2" />
                 </div>
               )}
             </div>
 
-            {/* Question */}
-            <div className="mb-8 space-y-6">
-              {/* Category Tag */}
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20">
-                <span className="text-sm font-medium text-primary">{q.category}</span>
+            {/* Question - Mobile Optimized */}
+            <div className="mb-4 sm:mb-6 lg:mb-8 space-y-3 sm:space-y-4 lg:space-y-6">
+              <div className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 mx-auto sm:mx-0">
+                <span className="text-xs sm:text-sm font-medium text-primary">{q.category}</span>
               </div>
               
-              {/* Question Text */}
-              <div className="bg-muted/30 dark:bg-muted/20 rounded-xl p-6 border border-border/50">
-                <h3 className="text-lg font-semibold text-foreground leading-relaxed">{q.questionText}</h3>
+              <div className="bg-muted/30 dark:bg-muted/20 rounded-xl p-3 sm:p-4 lg:p-6 border border-border/50">
+                <h3 className="text-base sm:text-lg font-semibold text-foreground leading-relaxed">{q.questionText}</h3>
               </div>
               
-              {/* Answer Options */}
               <RadioGroup
                 value={selectedAnswer !== null ? selectedAnswer.toString() : ""}
                 onValueChange={(value) => handleAnswerSelect(Number.parseInt(value))}
-                className="space-y-3"
+                className="space-y-2 sm:space-y-3"
               >
                 {q.options?.map((opt: string, i: number) => (
                   <div
                     key={i}
-                    className={`flex items-start space-x-4 p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:bg-muted/20 ${
+                    className={`flex items-start space-x-3 p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer hover:bg-muted/20 ${
                       selectedAnswer === i
                         ? 'border-primary bg-primary/5 dark:bg-primary/10'
                         : 'border-border/50 hover:border-border'
@@ -360,11 +353,11 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
                     <RadioGroupItem 
                       value={i.toString()} 
                       id={`option-${i}`} 
-                      className="mt-1"
+                      className="mt-0.5 sm:mt-1 flex-shrink-0"
                     />
                     <Label 
                       htmlFor={`option-${i}`} 
-                      className="flex-1 cursor-pointer text-base leading-relaxed"
+                      className="flex-1 cursor-pointer text-sm sm:text-base leading-relaxed"
                     >
                       <span className="font-medium text-primary mr-2">
                         {["A", "B", "C", "D"][i]}.
@@ -376,30 +369,31 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
               </RadioGroup>
             </div>
 
-            {/* Navigation */}
-            <div className="flex justify-between items-center">
+            {/* Navigation - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
               <Button 
                 variant="outline" 
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
-                className="border-border/50 hover:bg-muted/50"
+                className="w-full sm:w-auto border-border/50 hover:bg-muted/50 order-2 sm:order-1"
               >
                 Sebelumnya
               </Button>
               
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground order-1 sm:order-2">
                 <span>{answers.filter(a => a !== undefined).length} dari {questions.length} terjawab</span>
               </div>
 
               <Button 
                 onClick={handleNext} 
                 disabled={selectedAnswer === null || submitting} 
-                className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg pulse-glow btn-hover-lift relative z-20"
+                className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg pulse-glow btn-hover-lift relative z-20 order-3"
               >
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Mengirim...
+                    <span className="hidden sm:inline">Mengirim...</span>
+                    <span className="sm:hidden">...</span>
                   </>
                 ) : currentQuestion === questions.length - 1 ? (
                   <>
@@ -417,12 +411,14 @@ export default function AssessmentWorkPage({ onComplete, isOpen }: { onComplete?
           </div>
         </FloatingCard>
       </div>
+      
+      {/* Result Modal */}
       {showResultModal && latestResult && (
         <AssessmentResultModal
           result={latestResult}
           onClose={() => {
-            setShowResultModal(false);
-            router.push("/profile/Assessment/Results"); // Redirect setelah modal ditutup
+            setShowResultModal(false)
+            router.push("/profile/Assessment/Results")
           }}
         />
       )}
