@@ -39,18 +39,19 @@ export default function DashboardPage() {
     level: 3,
     achievements: 8,
   });
-  const progressPercentage = (stats.completedModules / stats.totalModules) * 100;
+  const progressPercentage =
+    (stats.completedModules / stats.totalModules) * 100;
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
   // Check profile status dari database
   const checkProfileStatus = async () => {
     if (!session?.user?.id) return;
-    
+
     setProfileLoading(true);
     try {
       const res = await fetch("/api/Profile");
       const data = await res.json();
-      
+
       if (res.ok && data.profile) {
         setHasProfile(true);
         // Update session jika hasProfile tidak sesuai
@@ -89,7 +90,8 @@ export default function DashboardPage() {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [session?.user?.id]);
 
   // Jika belum login, redirect ke login
@@ -110,12 +112,11 @@ export default function DashboardPage() {
           isExpanded={isSidebarExpanded}
           onToggleExpanded={() => setIsSidebarExpanded((prev) => !prev)}
         />
-        
+
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Main Content */}
           <div className="flex-1 overflow-auto">
             <div className="px-6 py-8 space-y-8">
-              
               {/* Header Section */}
               <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
                 <div className="absolute inset-0 bg-black/10" />
@@ -129,10 +130,14 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <h1 className="text-3xl font-bold text-white mb-2">
-                          Dashboard <span className="text-white/90">Career Mapper</span>
+                          Dashboard{" "}
+                          <span className="text-white/90">Career Mapper</span>
                         </h1>
                         <p className="text-white/80 text-lg">
-                          Selamat datang, <span className="font-semibold">{session.user.name || session.user.email}</span>
+                          Selamat datang,{" "}
+                          <span className="font-semibold">
+                            {session.user.name || session.user.email}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -147,10 +152,12 @@ export default function DashboardPage() {
                           <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                             {Math.round(progressPercentage)}%
                           </div>
-                          <div className="text-xs text-slate-600 font-medium">Progress</div>
+                          <div className="text-xs text-slate-600 font-medium">
+                            Progress
+                          </div>
                         </div>
                       </Card>
-                      
+
                       <Card className="p-4 bg-white/95 backdrop-blur-sm border-0 shadow-xl rounded-2xl">
                         <div className="text-center">
                           <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg">
@@ -159,7 +166,9 @@ export default function DashboardPage() {
                           <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                             {stats.level}
                           </div>
-                          <div className="text-xs text-slate-600 font-medium">Level</div>
+                          <div className="text-xs text-slate-600 font-medium">
+                            Level
+                          </div>
                         </div>
                       </Card>
                     </div>
@@ -180,10 +189,15 @@ export default function DashboardPage() {
                         <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                           {Math.round(progressPercentage)}%
                         </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">Progress Belajar</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">
+                          Progress Belajar
+                        </div>
                       </div>
                     </div>
-                    <Progress value={progressPercentage} className="h-2 rounded-full" />
+                    <Progress
+                      value={progressPercentage}
+                      className="h-2 rounded-full"
+                    />
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                       {stats.completedModules} dari {stats.totalModules} modul
                     </p>
@@ -201,7 +215,9 @@ export default function DashboardPage() {
                         <div className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                           {stats.currentStreak}
                         </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">Streak Harian</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">
+                          Streak Harian
+                        </div>
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
@@ -221,7 +237,9 @@ export default function DashboardPage() {
                         <div className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
                           {stats.totalPoints.toLocaleString()}
                         </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">Total Poin</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">
+                          Total Poin
+                        </div>
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
@@ -241,7 +259,9 @@ export default function DashboardPage() {
                         <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                           {stats.achievements}
                         </div>
-                        <div className="text-sm text-slate-600 dark:text-slate-400">Achievement</div>
+                        <div className="text-sm text-slate-600 dark:text-slate-400">
+                          Achievement
+                        </div>
                       </div>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
@@ -254,17 +274,20 @@ export default function DashboardPage() {
               {/* Main Features Grid */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Features</h2>
-                  <p className="text-slate-600 dark:text-slate-400">Jelajahi semua fitur platform</p>
+                  <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+                    Features
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Jelajahi semua fitur platform
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  
                   {/* Profile & Assessment Card - Enhanced */}
                   <Card className="group relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-colors" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full -translate-y-16 translate-x-16" />
-                    
+
                     <div className="relative p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
@@ -278,17 +301,18 @@ export default function DashboardPage() {
                             {profileLoading ? (
                               <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse" />
                             ) : (
-                              <div className={`w-2 h-2 rounded-full ${
-                                hasProfile ? "bg-green-500" : "bg-yellow-500"
-                              }`} />
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  hasProfile ? "bg-green-500" : "bg-yellow-500"
+                                }`}
+                              />
                             )}
                             <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {profileLoading 
-                                ? "Memuat status..." 
+                              {profileLoading
+                                ? "Memuat status..."
                                 : hasProfile
                                 ? "Profil lengkap"
-                                : "Profil belum lengkap"
-                              }
+                                : "Profil belum lengkap"}
                             </p>
                           </div>
                         </div>
@@ -304,20 +328,33 @@ export default function DashboardPage() {
                       {hasProfile ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
-                            <Button asChild size="sm" variant="outline" className="rounded-xl">
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="outline"
+                              className="rounded-xl text-black hover:text-white"
+                            >
                               <Link href="/profile/setup">
-                                <User className="w-4 h-4 mr-1" />
+                                <User className="w-4 h-4 mr-1 text-black hover:text-white" />
                                 Profil
                               </Link>
                             </Button>
-                            <Button asChild size="sm" variant="outline" className="rounded-xl">
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="outline"
+                              className="rounded-xl text-black hover:text-white"
+                            >
                               <Link href="/profile/Assessment/Results">
-                                <BarChart3 className="w-4 h-4 mr-1" />
+                                <BarChart3 className="w-4 h-4 mr-1 text-black hover:text-white" />
                                 Hasil
                               </Link>
                             </Button>
                           </div>
-                          <Button asChild className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 hover:from-indigo-600 hover:to-purple-600 rounded-xl">
+                          <Button
+                            asChild
+                            className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 hover:from-indigo-600 hover:to-purple-600 rounded-xl"
+                          >
                             <Link href="/profile/setup">
                               <Brain className="w-4 h-4 mr-2" />
                               Assessment Baru
@@ -343,7 +380,7 @@ export default function DashboardPage() {
                   <Card className="group relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/20 dark:to-blue-950/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 transition-colors" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full -translate-y-16 translate-x-16" />
-                    
+
                     <div className="relative p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
@@ -359,12 +396,17 @@ export default function DashboardPage() {
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-cyan-600 group-hover:translate-x-1 transition-all" />
                       </div>
-                      
+
                       <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                        Dapatkan rekomendasi karier dan roadmap pembelajaran yang dipersonalisasi berdasarkan minat dan kemampuan Anda.
+                        Dapatkan rekomendasi karier dan roadmap pembelajaran
+                        yang dipersonalisasi berdasarkan minat dan kemampuan
+                        Anda.
                       </p>
-                      
-                      <Button asChild className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0 hover:from-cyan-600 hover:to-blue-600 rounded-xl">
+
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-0 hover:from-cyan-600 hover:to-blue-600 rounded-xl"
+                      >
                         <Link href="/career-mapper">
                           <Target className="w-4 h-4 mr-2" />
                           Jelajahi Karier
@@ -377,7 +419,7 @@ export default function DashboardPage() {
                   <Card className="group relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5 group-hover:from-emerald-500/10 group-hover:to-green-500/10 transition-colors" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/10 to-green-400/10 rounded-full -translate-y-16 translate-x-16" />
-                    
+
                     <div className="relative p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
@@ -393,12 +435,16 @@ export default function DashboardPage() {
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                       </div>
-                      
+
                       <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                        Ikuti jalur pembelajaran yang disesuaikan dengan tujuan karier Anda. Modul terstruktur untuk hasil optimal.
+                        Ikuti jalur pembelajaran yang disesuaikan dengan tujuan
+                        karier Anda. Modul terstruktur untuk hasil optimal.
                       </p>
-                      
-                      <Button asChild className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 hover:from-emerald-600 hover:to-green-600 rounded-xl">
+
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 hover:from-emerald-600 hover:to-green-600 rounded-xl"
+                      >
                         <Link href="/learning-path">
                           <BookOpen className="w-4 h-4 mr-2" />
                           Mulai Belajar
@@ -411,7 +457,7 @@ export default function DashboardPage() {
                   <Card className="group relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
                     <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-yellow-500/5 group-hover:from-orange-500/10 group-hover:to-yellow-500/10 transition-colors" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/10 to-yellow-400/10 rounded-full -translate-y-16 translate-x-16" />
-                    
+
                     <div className="relative p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
@@ -427,12 +473,16 @@ export default function DashboardPage() {
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-orange-600 group-hover:translate-x-1 transition-all" />
                       </div>
-                      
+
                       <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                        Lihat statistik pembelajaran dan pencapaian Anda dalam dashboard yang komprehensif.
+                        Lihat statistik pembelajaran dan pencapaian Anda dalam
+                        dashboard yang komprehensif.
                       </p>
-                      
-                      <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0 hover:from-orange-600 hover:to-yellow-600 rounded-xl">
+
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0 hover:from-orange-600 hover:to-yellow-600 rounded-xl"
+                      >
                         <Link href="/profile">
                           <BarChart3 className="w-4 h-4 mr-2" />
                           Lihat Progress
@@ -445,7 +495,7 @@ export default function DashboardPage() {
                   <Card className="group relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 group-hover:from-purple-500/10 group-hover:to-pink-500/10 transition-colors" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full -translate-y-16 translate-x-16" />
-                    
+
                     <div className="relative p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
@@ -461,12 +511,16 @@ export default function DashboardPage() {
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
                       </div>
-                      
+
                       <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                        Bangun portfolio profesional untuk menunjukkan kemampuan dan proyek Anda kepada dunia.
+                        Bangun portfolio profesional untuk menunjukkan kemampuan
+                        dan proyek Anda kepada dunia.
                       </p>
-                      
-                      <Button asChild className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 hover:from-purple-600 hover:to-pink-600 rounded-xl">
+
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 hover:from-purple-600 hover:to-pink-600 rounded-xl"
+                      >
                         <Link href="/portfolio">
                           <Trophy className="w-4 h-4 mr-2" />
                           Kelola Portfolio
@@ -479,7 +533,7 @@ export default function DashboardPage() {
                   <Card className="group relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/20 dark:to-red-950/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
                     <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-red-500/5 group-hover:from-rose-500/10 group-hover:to-red-500/10 transition-colors" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-400/10 to-red-400/10 rounded-full -translate-y-16 translate-x-16" />
-                    
+
                     <div className="relative p-8">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-red-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
@@ -495,12 +549,16 @@ export default function DashboardPage() {
                         </div>
                         <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-rose-600 group-hover:translate-x-1 transition-all" />
                       </div>
-                      
+
                       <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                        Ikuti challenges menarik, raih badges eksklusif, dan bersaing di leaderboard global.
+                        Ikuti challenges menarik, raih badges eksklusif, dan
+                        bersaing di leaderboard global.
                       </p>
-                      
-                      <Button asChild className="w-full bg-gradient-to-r from-rose-500 to-red-500 text-white border-0 hover:from-rose-600 hover:to-red-600 rounded-xl">
+
+                      <Button
+                        asChild
+                        className="w-full bg-gradient-to-r from-rose-500 to-red-500 text-white border-0 hover:from-rose-600 hover:to-red-600 rounded-xl"
+                      >
                         <Link href="/gamification">
                           <Gamepad2 className="w-4 h-4 mr-2" />
                           Explore Games
