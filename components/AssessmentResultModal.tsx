@@ -279,6 +279,18 @@ export default function AssessmentResultModal({ result, onClose }: { result: any
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Kembali
               </Button>
+              
+              {/* New button for career mapper */}
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10 px-8"
+                onClick={() => window.location.href = "/career-mapper"}
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Lihat Career Mapper
+              </Button>
+              
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg px-8"

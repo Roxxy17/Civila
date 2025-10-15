@@ -10,8 +10,26 @@ export interface ICareerRecommendation extends Document {
   requiredSkills?: string[];
   roadmap?: mongoose.Types.ObjectId;
   assessmentResult: mongoose.Types.ObjectId;
-  isPicked? : boolean;
+  isPicked?: boolean;
   pickedAt?: Date;
+  
+  description?: string;                    // Career description
+  category?: string;                       // "Technology", "Design", "Business"
+  difficulty?: string;                     // "Beginner", "Intermediate", "Advanced"
+  marketDemand?: string;                   // "High", "Medium", "Low"
+  workType?: string[];                     // ["Remote", "Hybrid", "On-site"]
+  aiScore?: number;                        // 0-100 match score
+  matchReasons?: string[];                 // Why this career fits
+  softSkills?: string[];                   // Non-technical skills
+  tools?: string[];                        // Tools/technologies used
+  dayInLife?: string;                      // Typical work day description
+  careerPath?: string[];                   // Career progression steps
+
+  learningMilestones?: Array<{
+    month: number;
+    achievement: string;
+    skills: string[];
+  }>;
 }
 
 const CareerRecommendationSchema = new Schema<ICareerRecommendation>(
@@ -27,6 +45,24 @@ const CareerRecommendationSchema = new Schema<ICareerRecommendation>(
     assessmentResult: { type: Schema.Types.ObjectId, ref: "AssessmentResult" },
     isPicked: { type: Boolean, default: false },
     pickedAt: { type: Date, default: Date.now },
+    
+    // New fields
+    description: { type: String },
+    category: { type: String },
+    difficulty: { type: String },
+    marketDemand: { type: String },
+    workType: [{ type: String }],
+    aiScore: { type: Number, min: 0, max: 100 },
+    matchReasons: [{ type: String }],
+    softSkills: [{ type: String }],
+    tools: [{ type: String }],
+    dayInLife: { type: String },
+    careerPath: [{ type: String }],
+    learningMilestones: [{
+      month: { type: Number },
+      achievement: { type: String },
+      skills: [{ type: String }]
+    }]
   },
   { timestamps: true }
 );
