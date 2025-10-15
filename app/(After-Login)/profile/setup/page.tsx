@@ -92,13 +92,15 @@ export default function ProfileSetupPage() {
   // Calculate progress percentage
   const progressPercentage = ((currentStep - 1) / (stepConfig.length - 1)) * 100
 
+  // Fetch profile from DB on mount
   useEffect(() => {
-    if (session?.user?.name) {
-      setFormData((prev) => ({ ...prev, name: session.user.name }))
+    if (session?.user) {
+      fetchProfile()
     }
-    fetchProfile()
-  }, [session])
+    // eslint-disable-next-line
+  }, [session?.user?.email])
 
+  // Fetch profile and set formData if exists
   const fetchProfile = async () => {
     const res = await fetch("/api/Profile", { method: "GET" })
     if (res.ok) {
@@ -111,6 +113,17 @@ export default function ProfileSetupPage() {
         targetCareer: data.targetCareer || "",
         interests: (data.interests || []).join(", "),
         currentSkills: (data.currentSkills || []).join(", "),
+        uploadedCV: data.uploadedCV || "",
+      })
+    } else {
+      // Data belum ada, kosongkan form
+      setFormData({
+        name: session?.user?.name || "",
+        age: "",
+        background: "",
+        targetCareer: "",
+        interests: "",
+        currentSkills: "",
         uploadedCV: "",
       })
     }
