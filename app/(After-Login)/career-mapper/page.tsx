@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { 
   Brain, Search, Target, TrendingUp, Clock, Star, ArrowRight, 
   Sparkles, Filter, Grid3X3, List, Eye, Users, Award, Zap,
-  ChevronDown, SortAsc, MapPin, BookOpen, BarChart3, AlertCircle
+  ChevronDown, SortAsc, MapPin, BookOpen, BarChart3, AlertCircle,
+  Map, Info
 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { CareerRoadmapModal } from "@/components/career-roadmap-modal"
@@ -22,6 +23,7 @@ export default function CareerMapperPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCareer, setSelectedCareer] = useState<string | null>(null)
   const [showRoadmap, setShowRoadmap] = useState(false)
+  const [showDetail, setShowDetail] = useState(false) // ← Tambah closing parenthesis
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null)
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
   const [recommendations, setRecommendations] = useState<any[]>([])
@@ -82,9 +84,15 @@ export default function CareerMapperPage() {
     return matchesSearch && matchesDifficulty && matchesTrending
   })
 
-  const handleCareerClick = (careerName: string) => {
+  const handleCareerRoadmap = (careerName: string) => {
+    // Redirect ke roadmap page dengan career parameter
+    router.push(`/career-mapper/roadmap?career=${encodeURIComponent(careerName)}`)
+  }
+
+  const handleCareerDetail = (careerName: string) => {
     setSelectedCareer(careerName)
-    setShowRoadmap(true)
+    setShowDetail(true)
+    setShowRoadmap(false)
   }
 
   const getCareerByName = (name: string) => {
@@ -308,7 +316,8 @@ export default function CareerMapperPage() {
                         career={career}
                         index={index}
                         viewMode={viewMode}
-                        onClick={() => handleCareerClick(career.name)}
+                        onViewDetail={() => handleCareerDetail(career.name)}
+                        onViewRoadmap={() => handleCareerRoadmap(career.name)}
                         getDifficultyColor={getDifficultyColor}
                         getCategoryIcon={getCategoryIcon}
                         getDemandColor={getDemandColor}
@@ -346,7 +355,8 @@ export default function CareerMapperPage() {
         </div>
       </div>
 
-      {selectedCareer && (
+      {/* Career Roadmap Modal */}
+      {selectedCareer && showRoadmap && (
         <CareerRoadmapModal
           isOpen={showRoadmap}
           onClose={() => {
@@ -357,16 +367,374 @@ export default function CareerMapperPage() {
           careerData={getCareerByName(selectedCareer)}
         />
       )}
+
+      {/* Career Detail Modal */}
+      {selectedCareer && showDetail && (
+        <CareerDetailModal
+          isOpen={showDetail}
+          onClose={() => {
+            setShowDetail(false)
+            setSelectedCareer(null)
+          }}
+          career={selectedCareer}
+          careerData={getCareerByName(selectedCareer)}
+          router={router} // ← Pass router sebagai prop
+        />
+      )}
     </AuthGuard>
   )
 }
 
-// Komponen terpisah untuk Career Card
+// Komponen Career Detail Modal - ENHANCED dengan warna professional dan responsive
+function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any) { // ← Tambah router prop
+  if (!isOpen || !careerData) return null
+
+  const rawData = careerData.raw // Data mentah dari API
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden">
+        {/* Enhanced Header */}
+        <div className="bg-gradient-to-r from-slate-600 via-slate-700 to-slate-800 text-white p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                <Brain className="w-6 h-6 sm:w-8 sm:h-8" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{careerData.name}</h2>
+                <p className="text-white/90 text-sm sm:text-base lg:text-lg truncate">{rawData?.category} • {rawData?.level}</p>
+                <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
+                  <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                    AI Score: {rawData?.aiScore}%
+                  </Badge>
+                  <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                    {rawData?.marketDemand} Demand
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-white hover:bg-white/20 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 ml-2"
+            >
+              ✕
+            </Button>
+          </div>
+        </div>
+
+        {/* Enhanced Content */}
+        <div className="p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-240px)] sm:max-h-[calc(95vh-260px)]"> {/* ← Kurangi max-height untuk beri ruang lebih */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {/* Left Column - Main Info */}
+            <div className="xl:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8 pb-6"> {/* ← Tambah padding bottom di kolom kiri */}
+              {/* Description */}
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                  <Info className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                  Deskripsi Karier
+                </h3>
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 sm:p-6">
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm sm:text-base">
+                    {rawData?.description || careerData.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Day in Life */}
+              {rawData?.dayInLife && (
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                    Hari Tipikal dalam Pekerjaan
+                  </h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 sm:p-6 border border-emerald-200 dark:border-emerald-800">
+                    <p className="text-emerald-800 dark:text-emerald-200 leading-relaxed text-sm sm:text-base">
+                      {rawData.dayInLife}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Match Reasons */}
+              {rawData?.matchReasons && rawData.matchReasons.length > 0 && (
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+                    Mengapa Cocok untuk Anda
+                  </h3>
+                  <div className="space-y-3">
+                    {rawData.matchReasons.map((reason: string, index: number) => (
+                      <div key={index} className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 sm:p-4 border border-amber-200 dark:border-amber-800">
+                        <div className="flex items-start gap-3">
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold mt-0.5 flex-shrink-0">
+                            {index + 1}
+                          </div>
+                          <p className="text-amber-800 dark:text-amber-200 text-xs sm:text-sm leading-relaxed">
+                            {reason}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Learning Milestones */}
+              {rawData?.learningMilestones && rawData.learningMilestones.length > 0 && (
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    Milestone Pembelajaran
+                  </h3>
+                  <div className="space-y-4">
+                    {rawData.learningMilestones.map((milestone: any, index: number) => (
+                      <div key={index} className="relative">
+                        {/* Timeline line */}
+                        {index < rawData.learningMilestones.length - 1 && (
+                          <div className="absolute left-5 sm:left-6 top-12 sm:top-12 w-0.5 h-16 sm:h-20 bg-blue-200 dark:bg-blue-800"></div>
+                        )}
+                        
+                        <div className="flex gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg text-xs sm:text-sm flex-shrink-0">
+                            {milestone.month}M
+                          </div>
+                          <div className="flex-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+                            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 text-sm sm:text-base">
+                              {milestone.achievement}
+                            </h4>
+                            <div className="flex flex-wrap gap-1 sm:gap-2">
+                              {milestone.skills?.map((skill: string, skillIndex: number) => (
+                                <Badge key={skillIndex} className="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 border-blue-300 dark:border-blue-600 text-xs">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Career Path */}
+              {rawData?.careerPath && rawData.careerPath.length > 0 && (
+                <div className=""> {/* ← Tambah margin bottom yang lebih besar */}
+                  <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
+                    Jalur Karier
+                  </h3>
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4 sm:p-6 border border-indigo-200 dark:border-indigo-800">
+                    <div className="space-y-3 pb-2"> {/* ← Tambah padding bottom */}
+                      {rawData.careerPath.map((step: string, index: number) => (
+                        <div key={index} className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-indigo-800 dark:text-indigo-200 font-medium text-sm sm:text-base break-words">
+                              {step}
+                            </span>
+                          </div>
+                          {index < rawData.careerPath.length - 1 && (
+                            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500 flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Details & Stats */}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Key Metrics */}
+              <div>
+                <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                  Informasi Kunci
+                </h3>
+                <div className="space-y-3">
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 sm:p-4 border border-emerald-200 dark:border-emerald-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-emerald-700 dark:text-emerald-300">Rentang Gaji</span>
+                    </div>
+                    <span className="font-bold text-sm sm:text-lg text-emerald-600 break-words">{careerData.salary}</span>
+                  </div>
+                  
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">Pertumbuhan</span>
+                    </div>
+                    <span className="font-bold text-sm sm:text-lg text-blue-600">{careerData.growth}</span>
+                  </div>
+                  
+                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 sm:p-4 border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-300">Waktu Belajar</span>
+                    </div>
+                    <span className="font-bold text-sm sm:text-lg text-amber-600">{careerData.timeToMaster}</span>
+                  </div>
+                  
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">Tingkat Kesulitan</span>
+                    </div>
+                    <Badge className={careerData.difficulty === 'Beginner' ? 'bg-emerald-500 text-white' : 
+                                   careerData.difficulty === 'Intermediate' ? 'bg-amber-500 text-white' : 
+                                   'bg-red-500 text-white'}>
+                      {rawData?.difficulty || careerData.difficulty}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Work Types */}
+              {rawData?.workType && rawData.workType.length > 0 && (
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
+                    Tipe Pekerjaan
+                  </h3>
+                  <div className="space-y-2">
+                    {rawData.workType.map((type: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-800">
+                        <div className="w-2 h-2 bg-teal-500 rounded-full flex-shrink-0"></div>
+                        <span className="text-xs sm:text-sm text-teal-700 dark:text-teal-300">{type}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Required Skills */}
+              <div>
+                <h3 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2">
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
+                  Skills Diperlukan
+                </h3>
+                <div className="space-y-2">
+                  {careerData.skills?.slice(0, 5).map((skill: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm text-orange-700 dark:text-orange-300 break-words">{skill}</span>
+                    </div>
+                  ))}
+                  {careerData.skills?.length > 5 && (
+                    <div className="text-center">
+                      <Badge variant="outline" className="text-xs">
+                        +{careerData.skills.length - 5} skills lainnya
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Soft Skills */}
+              {rawData?.softSkills && rawData.softSkills.length > 0 && (
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />
+                    Soft Skills
+                  </h3>
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
+                    {rawData.softSkills.map((skill: string, index: number) => (
+                      <Badge key={index} className="bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200 border-rose-300 dark:border-rose-600 text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tools */}
+              {rawData?.tools && rawData.tools.length > 0 && (
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-violet-600" />
+                    Tools & Teknologi
+                  </h3>
+                  <div className="space-y-2">
+                    {rawData.tools.slice(0, 5).map((tool: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-violet-50 dark:bg-violet-900/20 rounded-lg border border-violet-200 dark:border-violet-800">
+                        <div className="w-2 h-2 bg-violet-500 rounded-full flex-shrink-0"></div>
+                        <span className="text-xs sm:text-sm text-violet-700 dark:text-violet-300 break-words">{tool}</span>
+                      </div>
+                    ))}
+                    {rawData.tools.length > 5 && (
+                      <div className="text-center">
+                        <Badge variant="outline" className="text-xs">
+                          +{rawData.tools.length - 5} tools lainnya
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Recommendation Badge */}
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">Rekomendasi AI</h4>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 mb-3">
+                  Karier ini direkomendasikan khusus untuk Anda berdasarkan analisis AI mendalam terhadap profil dan kemampuan Anda.
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-slate-500 to-slate-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${rawData?.aiScore || 0}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-xs sm:text-sm font-bold text-slate-600">
+                    {rawData?.aiScore || 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Footer - Perbaiki positioning untuk tidak menutupi content */}
+        <div className="border-t border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50/98 to-white/98 dark:from-slate-800/98 dark:to-slate-900/98 backdrop-blur-md">
+          <div className="p-3 sm:p-6"> {/* ← Pindahkan padding ke dalam div terpisah */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Button onClick={onClose} variant="outline" className="flex-1 text-sm sm:text-base">
+                <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
+                Tutup
+              </Button>
+              <Button 
+                onClick={() => {
+                  onClose()
+                  // Redirect ke roadmap page - FIXED
+                  router.push(`/career-mapper/roadmap?career=${encodeURIComponent(careerData.name)}`)
+                }}
+                className="flex-1 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-sm sm:text-base"
+              >
+                <Map className="w-4 h-4 mr-2" />
+                Lihat Learning Roadmap
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Komponen terpisah untuk Career Card dengan 2 tombol
 function CareerCard({ 
   career, 
   index, 
   viewMode, 
-  onClick, 
+  onViewDetail,
+  onViewRoadmap,
   getDifficultyColor, 
   getCategoryIcon, 
   getDemandColor,
@@ -376,10 +744,9 @@ function CareerCard({
     return (
       <FloatingCard
         delay={0.1 + index * 0.05}
-        className="cursor-pointer hover:shadow-lg transition-all duration-300 group"
-        onClick={onClick}
+        className="transition-all duration-300 group hover:shadow-lg"
       >
-        <div className="flex items-center gap-6 p-2">
+        <div className="flex items-center gap-6 p-4">
           <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-white shadow-lg ${
             isAIRecommended 
               ? 'bg-gradient-to-br from-purple-500 to-pink-500' 
@@ -408,7 +775,31 @@ function CareerCard({
             <Badge className={getDifficultyColor(career.difficulty)}>
               {career.difficulty}
             </Badge>
-            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewDetail()
+                }}
+                className="text-xs"
+              >
+                <Info className="w-3 h-3 mr-1" />
+                Detail
+              </Button>
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewRoadmap()
+                }}
+                className="text-xs"
+              >
+                <Map className="w-3 h-3 mr-1" />
+                Roadmap
+              </Button>
+            </div>
           </div>
         </div>
       </FloatingCard>
@@ -418,8 +809,7 @@ function CareerCard({
   return (
     <FloatingCard
       delay={0.1 + index * 0.05}
-      className="cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
-      onClick={onClick}
+      className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group relative overflow-hidden"
     >
       {/* Background Pattern */}
       <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
@@ -480,7 +870,7 @@ function CareerCard({
       </div>
 
       {/* Skills */}
-      <div className="mb-4">
+      <div className="mb-6">
         <p className="text-xs text-muted-foreground mb-2">Skills diperlukan:</p>
         <div className="flex flex-wrap gap-1">
           {career.skills?.slice(0, 3).map((skill: string) => (
@@ -496,15 +886,39 @@ function CareerCard({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between">
-        <Badge className={getDifficultyColor(career.difficulty)}>
-          {career.difficulty}
-        </Badge>
-        <div className="flex items-center text-primary text-sm font-medium">
-          <Eye className="w-4 h-4 mr-1" />
-          <span>Lihat Detail</span>
-          <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+      {/* Footer with Level and Action Buttons */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Badge className={getDifficultyColor(career.difficulty)}>
+            {career.difficulty}
+          </Badge>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onViewDetail()
+            }}
+            className="text-xs"
+          >
+            <Info className="w-3 h-3 mr-1" />
+            Lihat Detail
+          </Button>
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onViewRoadmap()
+            }}
+            className="text-xs"
+          >
+            <Map className="w-3 h-3 mr-1" />
+            Lihat Roadmap
+          </Button>
         </div>
       </div>
     </FloatingCard>
