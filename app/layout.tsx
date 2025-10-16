@@ -8,6 +8,11 @@ export const metadata = {
   title: "Civila - AI-Powered Career Guidance Platform",
   description:
     "Temukan jalur karier impianmu dengan AI. Platform terdepan untuk pengembangan karier dan pembelajaran yang dipersonalisasi.",
+  icons: {
+    icon: '/civilalogo.png',
+    shortcut: '/civilalogo.png',
+    apple: '/civilalogo.png',
+  },
 }
 
 export default function RootLayout({
