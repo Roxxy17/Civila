@@ -23,7 +23,7 @@ export default function CareerMapperPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCareer, setSelectedCareer] = useState<string | null>(null)
   const [showRoadmap, setShowRoadmap] = useState(false)
-  const [showDetail, setShowDetail] = useState(false) // ← Tambah closing parenthesis
+  const [showDetail, setShowDetail] = useState(false)
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null)
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
   const [recommendations, setRecommendations] = useState<any[]>([])
@@ -68,7 +68,7 @@ export default function CareerMapperPage() {
     skills: rec.requiredSkills || [],
     timeToMaster: rec.estimatedLearningTime,
     difficulty: rec.level === "Junior" ? "Beginner" : rec.level === "Mid" ? "Intermediate" : rec.level === "Senior" ? "Advanced" : "Beginner",
-    trending: false, // Bisa ditambahkan logic trending berdasarkan data
+    trending: false,
     category: "AI Recommended",
     demandLevel: "Personalized",
     level: rec.level,
@@ -84,8 +84,8 @@ export default function CareerMapperPage() {
     return matchesSearch && matchesDifficulty && matchesTrending
   })
 
+  // Handlers
   const handleCareerRoadmap = (careerName: string) => {
-    // Redirect ke roadmap page dengan career parameter
     router.push(`/career-mapper/roadmap?career=${encodeURIComponent(careerName)}`)
   }
 
@@ -93,6 +93,11 @@ export default function CareerMapperPage() {
     setSelectedCareer(careerName)
     setShowDetail(true)
     setShowRoadmap(false)
+  }
+
+  const handleViewLearningPath = (careerName: string) => {
+    // Redirect ke learning path page dengan career parameter
+    router.push(`/learning-path?career=${encodeURIComponent(careerName)}`)
   }
 
   const getCareerByName = (name: string) => {
@@ -318,7 +323,7 @@ export default function CareerMapperPage() {
                         viewMode={viewMode}
                         onViewDetail={() => handleCareerDetail(career.name)}
                         onViewRoadmap={() => handleCareerRoadmap(career.name)}
-                        onViewLearningPath={() => handleViewLearningPath(career.name)} // ← Tambah handler untuk Learning Path
+                        onViewLearningPath={() => handleViewLearningPath(career.name)}
                         getDifficultyColor={getDifficultyColor}
                         getCategoryIcon={getCategoryIcon}
                         getDemandColor={getDemandColor}
@@ -379,18 +384,19 @@ export default function CareerMapperPage() {
           }}
           career={selectedCareer}
           careerData={getCareerByName(selectedCareer)}
-          router={router} // ← Pass router sebagai prop
+          router={router}
         />
       )}
     </AuthGuard>
   )
 }
 
+// ...existing code...
 // Komponen Career Detail Modal - ENHANCED dengan warna professional dan responsive
-function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any) { // ← Tambah router prop
+function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any) {
   if (!isOpen || !careerData) return null
 
-  const rawData = careerData.raw // Data mentah dari API
+  const rawData = careerData.raw
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
@@ -427,10 +433,10 @@ function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any)
         </div>
 
         {/* Enhanced Content */}
-        <div className="p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-240px)] sm:max-h-[calc(95vh-260px)]"> {/* ← Kurangi max-height untuk beri ruang lebih */}
+        <div className="p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-240px)] sm:max-h-[calc(95vh-260px)]">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Left Column - Main Info */}
-            <div className="xl:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8 pb-6"> {/* ← Tambah padding bottom di kolom kiri */}
+            <div className="xl:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8 pb-6">
               {/* Description */}
               <div>
                 <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
@@ -523,13 +529,13 @@ function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any)
 
               {/* Career Path */}
               {rawData?.careerPath && rawData.careerPath.length > 0 && (
-                <div className=""> {/* ← Tambah margin bottom yang lebih besar */}
+                <div className="">
                   <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
                     Jalur Karier
                   </h3>
                   <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4 sm:p-6 border border-indigo-200 dark:border-indigo-800">
-                    <div className="space-y-3 pb-2"> {/* ← Tambah padding bottom */}
+                    <div className="space-y-3 pb-2">
                       {rawData.careerPath.map((step: string, index: number) => (
                         <div key={index} className="flex items-center gap-3 sm:gap-4">
                           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0">
@@ -702,9 +708,9 @@ function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any)
           </div>
         </div>
 
-        {/* Enhanced Footer - Perbaiki positioning untuk tidak menutupi content */}
+        {/* Enhanced Footer */}
         <div className="border-t border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50/98 to-white/98 dark:from-slate-800/98 dark:to-slate-900/98 backdrop-blur-md">
-          <div className="p-3 sm:p-6"> {/* ← Pindahkan padding ke dalam div terpisah */}
+          <div className="p-3 sm:p-6">
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Button onClick={onClose} variant="outline" className="flex-1 text-sm sm:text-base">
                 <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
@@ -713,7 +719,6 @@ function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any)
               <Button 
                 onClick={() => {
                   onClose()
-                  // Redirect ke roadmap page - FIXED
                   router.push(`/career-mapper/roadmap?career=${encodeURIComponent(careerData.name)}`)
                 }}
                 className="flex-1 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-sm sm:text-base"
@@ -729,14 +734,14 @@ function CareerDetailModal({ isOpen, onClose, career, careerData, router }: any)
   )
 }
 
-// Komponen terpisah untuk Career Card dengan 2 tombol
+// Komponen terpisah untuk Career Card dengan 3 tombol
 function CareerCard({ 
   career, 
   index, 
   viewMode, 
   onViewDetail,
   onViewRoadmap,
-  onViewLearningPath, // ← Tambah prop baru
+  onViewLearningPath,
   getDifficultyColor, 
   getCategoryIcon, 
   getDemandColor,
@@ -932,18 +937,19 @@ function CareerCard({
             <Map className="w-3 h-3 mr-1" />
             Lihat Roadmap
           </Button>
-          <Button
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              onViewLearningPath()
-            }}
-            className="text-xs"
-          >
-            <BookOpen className="w-3 h-3 mr-1" />
-            Lihat Learning
-          </Button>
         </div>
+        <Button
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation()
+            onViewLearningPath()
+          }}
+          className="text-xs w-full"
+          variant="outline"
+        >
+          <BookOpen className="w-3 h-3 mr-1" />
+          Mulai Learning Path
+        </Button>
       </div>
     </FloatingCard>
   )
