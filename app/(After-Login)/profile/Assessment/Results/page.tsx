@@ -58,15 +58,34 @@ function CareerPickButton({
   // Update success state ketika isPicked berubah dari parent
   useEffect(() => {
     setSuccess(isPicked ?? false);
-  }, [isPicked]);
+    console.log("🔄 CareerPickButton state updated:", {
+      careerName,
+      assessmentResultId,
+      isPicked,
+      success: isPicked ?? false
+    });
+  }, [isPicked, careerName, assessmentResultId]);
 
   const handlePick = async () => {
-    if (success || isPicked) return; // Prevent double picking
+    if (success || isPicked) {
+      console.log("⚠️ Career already picked, preventing double pick:", {
+        careerName,
+        assessmentResultId,
+        success,
+        isPicked
+      });
+      return;
+    }
 
     setLoading(true);
     setError("");
 
     try {
+      console.log("🚀 Picking career:", {
+        careerName,
+        assessmentResultId
+      });
+
       const res = await fetch("/api/CareerRecommendation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,14 +100,19 @@ function CareerPickButton({
       if (res.ok && data.success) {
         setSuccess(true);
         setError("");
+        
+        console.log("✅ Career picked successfully:", {
+          careerName,
+          assessmentResultId,
+          response: data
+        });
+
         // Panggil callback untuk update parent state
         if (onPickSuccess) {
           onPickSuccess(careerName, assessmentResultId);
         }
-
-        // Optional: Show success message
-        console.log("✅ Karier berhasil dipilih:", careerName);
       } else {
+        console.error("❌ Failed to pick career:", data);
         setError(data.error || "Gagal memilih karier");
         setSuccess(false);
       }
@@ -108,64 +132,141 @@ function CareerPickButton({
     ? "✓ Sudah Dipilih"
     : "Pilih Karier";
 
+  // Enhanced career card with better styling
   return (
-    <div className="p-4 rounded-xl bg-background border border-border hover:border-primary/30 transition-colors group flex items-center gap-4">
-      <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center shadow-md">
-        <User className="w-5 h-5 text-white" />
-      </div>
-      <div className="flex-1">
-        <span className="font-semibold text-foreground text-sm">
-          {careerName}
-        </span>
-        <div className="flex items-center gap-1 mt-1">
-          <Star className="w-3 h-3 text-yellow-500" />
-          <span className="text-xs text-muted-foreground">
-            Rekomendasi tinggi
-          </span>
+    <div className="group relative p-6 rounded-2xl bg-gradient-to-br from-background to-muted/30 border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] overflow-hidden">
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      
+      {/* Success indicator overlay */}
+      {(success || isPicked) && (
+        <div className="absolute top-3 right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+          <CheckCircle className="w-5 h-5 text-white" />
+        </div>
+      )}
+
+      <div className="relative z-10 space-y-4">
+        {/* Header */}
+        <div className="flex items-start gap-4">
+          {/* Career Icon */}
+          <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+            <Target className="w-7 h-7 text-white" />
+          </div>
+
+          {/* Career Info */}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-2">
+              {careerName}
+            </h4>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-500" />
+                <Star className="w-4 h-4 text-yellow-500" />
+                <Star className="w-4 h-4 text-yellow-500" />
+                <Star className="w-4 h-4 text-yellow-500" />
+                <Star className="w-4 h-4 text-yellow-300" />
+              </div>
+              <Badge variant="secondary" className="text-xs px-2 py-1 bg-primary/10 text-primary border-primary/20">
+                Highly Recommended
+              </Badge>
+            </div>
+          </div>
         </div>
 
-        {/* Status messages */}
+        {/* Career Description */}
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Karier ini sangat cocok dengan profil dan minat Anda berdasarkan hasil assessment yang mendalam.
+          </p>
+
+          {/* Features */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <span>Match Score: 95%</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="w-2 h-2 bg-blue-500 rounded-full" />
+              <span>Growth Potential</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="w-2 h-2 bg-purple-500 rounded-full" />
+              <span>High Demand</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="w-2 h-2 bg-orange-500 rounded-full" />
+              <span>Good Salary</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Messages */}
         {(success || isPicked) && (
-          <div className="flex items-center gap-1 mt-1">
-            <CheckCircle className="w-3 h-3 text-green-500" />
-            <span className="text-xs text-green-600 font-medium">
-              Karier sudah dipilih!
-              <button
-                className="text-blue-600 underline ml-1 hover:text-blue-700"
+          <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+                Karier Berhasil Dipilih!
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-green-600 dark:text-green-400">
+                Lihat detail lengkap dan roadmap karier
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/40"
                 onClick={() => (window.location.href = "/career-mapper")}
               >
-                Lihat detail &rarr;
-              </button>
-            </span>
+                Buka Career Mapper →
+              </Button>
+            </div>
           </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-1 mt-1">
-            <AlertCircle className="w-3 h-3 text-red-500" />
-            <span className="text-xs text-red-600">{error}</span>
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
+            </div>
           </div>
         )}
+
+        {/* Action Button */}
+        <div className="pt-2">
+          <Button
+            className={`w-full transition-all duration-300 ${
+              isDisabled
+                ? "opacity-75 cursor-not-allowed"
+                : "hover:scale-105 hover:shadow-lg group-hover:shadow-xl"
+            } ${
+              (success || isPicked)
+                ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                : "bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg"
+            }`}
+            disabled={isDisabled}
+            onClick={handlePick}
+          >
+            <div className="flex items-center justify-center gap-2">
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {(success || isPicked) && <CheckCircle className="w-4 h-4" />}
+              {!loading && !success && !isPicked && <Target className="w-4 h-4" />}
+              
+              <span className="font-semibold">{buttonText}</span>
+              
+              {!isDisabled && !success && !isPicked && (
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+              )}
+            </div>
+          </Button>
+        </div>
       </div>
 
-      <Button
-        size="sm"
-        className={`ml-2 transition-all ${
-          isDisabled
-            ? "opacity-75 cursor-not-allowed"
-            : "hover:scale-105 hover:shadow-md"
-        } ${
-          (success || isPicked)
-            ? "bg-green-500 hover:bg-green-600 text-white"
-            : ""
-        }`}
-        disabled={isDisabled}
-        onClick={handlePick}
-      >
-        {loading && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
-        {buttonText}
-        {!isDisabled && <ChevronRight className="w-4 h-4 ml-1" />}
-      </Button>
+      {/* Decorative elements */}
+      <div className="absolute -top-6 -right-6 w-12 h-12 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-gradient-to-br from-accent/20 to-primary/20 rounded-full opacity-30 group-hover:opacity-70 transition-opacity duration-300" />
     </div>
   );
 }
@@ -204,7 +305,7 @@ function ResultsContent() {
   // Debounced search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Function untuk fetch picked careers
+  // Function untuk fetch picked careers - DIPERBAIKI
   const fetchPickedCareers = useCallback(async () => {
     try {
       const res = await fetch("/api/CareerRecommendation");
@@ -212,7 +313,7 @@ function ResultsContent() {
         const data = await res.json();
         const map: { [key: string]: boolean } = {};
 
-        // Buat mapping berdasarkan assessmentResult ID dan careerName
+        // Buat mapping berdasarkan assessmentResult ID dan careerName YANG SPESIFIK
         data.recommendations?.forEach((rec: any) => {
           if (rec.isPicked && rec.assessmentResult && rec.careerName) {
             // Gunakan assessmentResult._id jika populate, atau assessmentResult jika ObjectId
@@ -220,14 +321,23 @@ function ResultsContent() {
               typeof rec.assessmentResult === "object"
                 ? rec.assessmentResult._id
                 : rec.assessmentResult;
+            
+            // PERBAIKAN: Hanya tandai yang benar-benar terpilih untuk assessment spesifik
             const key = `${assessmentId}_${rec.careerName}`;
             map[key] = true;
-            console.log("✅ Found picked career:", key);
+            
+            console.log("✅ Found picked career:", {
+              key,
+              careerName: rec.careerName,
+              assessmentId,
+              isPicked: rec.isPicked,
+              pickedAt: rec.pickedAt
+            });
           }
         });
 
         setPickedCareers(map);
-        console.log("📊 Total picked careers:", Object.keys(map).length);
+        console.log("📊 Total picked careers by assessment:", map);
       }
     } catch (error) {
       console.error("❌ Error fetching picked careers:", error);
@@ -241,20 +351,29 @@ function ResultsContent() {
     }
   }, [mounted, results.length, fetchPickedCareers]);
 
-  // Handle success pick career
+  // Handle success pick career - DIPERBAIKI
   const handlePickSuccess = useCallback(
     (careerName: string, assessmentResultId: string) => {
       const key = `${assessmentResultId}_${careerName}`;
+      
       setPickedCareers((prev) => {
         const updated = {
           ...prev,
-          [key]: true,
+          [key]: true, // Hanya update untuk assessment yang spesifik
         };
-        console.log("✅ Updated picked careers:", key);
+        
+        console.log("✅ Career picked successfully:", {
+          key,
+          careerName,
+          assessmentResultId,
+          previousState: prev[key],
+          newState: true
+        });
+        
         return updated;
       });
 
-      // Refetch untuk memastikan data sync
+      // Refetch untuk memastikan data sync dari database
       setTimeout(() => {
         fetchPickedCareers();
       }, 1000);
@@ -962,45 +1081,89 @@ function ResultsContent() {
                   </FloatingCard>
                 )}
 
-                {/* Recommendations dengan callback */}
+                {/* Enhanced Recommendations Section */}
                 {selectedResult.recommendedCareers &&
                   selectedResult.recommendedCareers.length > 0 && (
-                    <FloatingCard className="bg-primary/5 border-primary/20">
-                      <div className="p-6">
-                        <div className="text-center mb-6">
-                          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                            <CheckCircle className="w-8 h-8 text-white" />
+                    <FloatingCard className="bg-gradient-to-br from-primary/5 via-background to-accent/5 border-primary/20 overflow-hidden">
+                      <div className="p-8 relative">
+                        {/* Background decoration */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full transform translate-x-16 -translate-y-16" />
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-accent/10 to-primary/10 rounded-full transform -translate-x-12 translate-y-12" />
+                        
+                        <div className="relative z-10">
+                          {/* Header */}
+                          <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                              <Sparkles className="w-10 h-10 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-foreground mb-3">
+                              <GradientText>
+                                🎯 Rekomendasi Karier Terbaik untuk Anda
+                              </GradientText>
+                            </h3>
+                            <p className="text-muted-foreground text-base max-w-2xl mx-auto leading-relaxed">
+                              Berdasarkan analisis mendalam terhadap {selectedResult.breakdown ? Object.keys(selectedResult.breakdown).length : 0} area kompetensi 
+                              dan profil kepribadian Anda, berikut adalah karier yang paling sesuai dengan potensi dan minat Anda.
+                            </p>
+                            <div className="flex items-center justify-center gap-4 mt-4">
+                              <Badge variant="outline" className="px-4 py-2 bg-primary/10 border-primary/30 text-primary">
+                                <Award className="w-4 h-4 mr-2" />
+                                {selectedResult.recommendedCareers.length} Karier Rekomendasi
+                              </Badge>
+                              <Badge variant="outline" className="px-4 py-2 bg-green-500/10 border-green-500/30 text-green-600">
+                                <TrendingUp className="w-4 h-4 mr-2" />
+                                Match Score {selectedResult.overallScore}%
+                              </Badge>
+                            </div>
                           </div>
-                          <h3 className="text-xl font-bold text-foreground">
-                            <GradientText>
-                              Rekomendasi Karier untuk Anda
-                            </GradientText>
-                          </h3>
-                          <p className="text-muted-foreground text-sm mt-2 max-w-2xl mx-auto">
-                            Berdasarkan analisis mendalam terhadap jawaban
-                            assessment Anda
-                          </p>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {selectedResult.recommendedCareers.map(
-                            (rec: any, idx: number) => {
-                              // Get the correct assessment ID for checking picked status
-                              const assessmentId = selectedResult.parentId || selectedResult._id;
-                              const pickedKey = `${assessmentId}_${rec.careerName}`;
-                              const isAlreadyPicked = pickedCareers[pickedKey] || false;
-                              
-                              return (
-                                <CareerPickButton
-                                  key={`recommendation-${idx}-${rec.careerName}-${assessmentId}`}
-                                  careerName={rec.careerName}
-                                  assessmentResultId={assessmentId}
-                                  isPicked={isAlreadyPicked}
-                                  onPickSuccess={handlePickSuccess}
-                                />
-                              );
-                            }
-                          )}
+                          {/* Career Cards Grid */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {selectedResult.recommendedCareers.map(
+                              (rec: any, idx: number) => {
+                                // PERBAIKAN: Pastikan menggunakan ID assessment yang tepat
+                                const assessmentId = selectedResult._id || selectedResult.parentId;
+                                const pickedKey = `${assessmentId}_${rec.careerName}`;
+                                const isAlreadyPicked = pickedCareers[pickedKey] || false;
+                                
+                                console.log("🔍 Checking career pick status:", {
+                                  careerName: rec.careerName,
+                                  assessmentId,
+                                  pickedKey,
+                                  isAlreadyPicked,
+                                  allPickedCareers: pickedCareers
+                                });
+                                
+                                return (
+                                  <CareerPickButton
+                                    key={`recommendation-${assessmentId}-${idx}-${rec.careerName}`}
+                                    careerName={rec.careerName}
+                                    assessmentResultId={assessmentId}
+                                    isPicked={isAlreadyPicked}
+                                    onPickSuccess={handlePickSuccess}
+                                  />
+                                );
+                              }
+                            )}
+                          </div>
+
+                          {/* Additional Info */}
+                          <div className="mt-8 p-6 bg-muted/30 rounded-2xl border border-border">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                                <Brain className="w-6 h-6 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-foreground mb-2">💡 Tips untuk Langkah Selanjutnya</h4>
+                                <ul className="text-sm text-muted-foreground space-y-1 leading-relaxed">
+                                  <li>• Pilih 1-2 karier yang paling menarik minat Anda</li>
+                                  <li>• Gunakan Career Mapper untuk melihat roadmap detail</li>
+                                  <li>• Lakukan riset mendalam tentang industri yang dipilih</li>
+                                  <li>• Mulai networking dengan profesional di bidang tersebut</li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </FloatingCard>

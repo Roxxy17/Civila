@@ -40,6 +40,20 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // Cek apakah career untuk assessment ini sudah dipilih
+  const existingPick = await CareerRecommendation.findOne({
+    careerName,
+    assessmentResult: assessmentResultId,
+    isPicked: true
+  });
+
+  if (existingPick) {
+    return NextResponse.json({
+      success: false,
+      error: "Career sudah dipilih untuk assessment ini"
+    });
+  }
+
   // Ambil detail assessment result
   const assessmentResult = await AssessmentResult.findById(assessmentResultId);
   if (!assessmentResult) {
