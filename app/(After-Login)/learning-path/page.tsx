@@ -45,254 +45,10 @@ import {
   Layers,
   PenTool,
   Database,
+  AlertCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-
-const learningPaths = {
-  "Data Scientist": {
-    title: "Data Scientist Learning Path",
-    description:
-      "Menjadi ahli dalam analisis data dan machine learning dengan kemampuan membangun model prediktif dan insights bisnis",
-    totalModules: 15,
-    estimatedTime: "12-18 bulan",
-    difficulty: "Advanced",
-    color: "from-emerald-500 to-teal-500",
-    icon: BarChart3,
-    category: "Analytics",
-    rating: 4.8,
-    students: 1250,
-    modules: [
-      {
-        id: 1,
-        title: "Python Programming Fundamentals",
-        description:
-          "Pelajari dasar-dasar Python untuk data science mulai dari syntax hingga OOP",
-        duration: "2 minggu",
-        type: "Course",
-        difficulty: "Beginner",
-        completed: false,
-        locked: false,
-        lessons: 12,
-        projects: 3,
-        content: {
-          lessons: [
-            "Variables & Data Types",
-            "Control Flow",
-            "Functions",
-            "Object-Oriented Programming",
-          ],
-          projects: ["Calculator App", "Data Processing Script"],
-          resources: [
-            { name: "Python.org Tutorial", url: "#", type: "Documentation" },
-            { name: "Automate the Boring Stuff", url: "#", type: "Book" },
-          ],
-        },
-      },
-      {
-        id: 2,
-        title: "Statistics & Probability",
-        description:
-          "Konsep statistik yang essential untuk data science dan machine learning",
-        duration: "3 minggu",
-        type: "Theory",
-        difficulty: "Intermediate",
-        completed: false,
-        locked: true,
-        lessons: 18,
-        projects: 2,
-        content: {
-          lessons: [
-            "Descriptive Statistics",
-            "Probability Distributions",
-            "Hypothesis Testing",
-            "Correlation & Regression",
-          ],
-          projects: ["Statistical Analysis Report", "A/B Testing Simulation"],
-          resources: [
-            { name: "Khan Academy Statistics", url: "#", type: "Course" },
-            { name: "Think Stats", url: "#", type: "Book" },
-          ],
-        },
-      },
-      {
-        id: 3,
-        title: "Data Manipulation with Pandas",
-        description:
-          "Master data manipulation menggunakan Pandas library untuk data cleaning dan analysis",
-        duration: "2 minggu",
-        type: "Hands-on",
-        difficulty: "Intermediate",
-        completed: false,
-        locked: true,
-        lessons: 15,
-        projects: 4,
-        content: {
-          lessons: [
-            "DataFrame Basics",
-            "Data Cleaning",
-            "Grouping & Aggregation",
-            "Merging Data",
-          ],
-          projects: ["Sales Data Analysis", "Customer Segmentation"],
-          resources: [
-            { name: "Pandas Documentation", url: "#", type: "Documentation" },
-            { name: "Python for Data Analysis", url: "#", type: "Book" },
-          ],
-        },
-      },
-    ],
-  },
-  "Software Engineer": {
-    title: "Software Engineer Learning Path",
-    description:
-      "Menjadi full-stack developer yang handal dengan menguasai teknologi frontend dan backend modern",
-    totalModules: 12,
-    estimatedTime: "8-12 bulan",
-    difficulty: "Intermediate",
-    color: "from-blue-500 to-cyan-500",
-    icon: Code,
-    category: "Technology",
-    rating: 4.9,
-    students: 2340,
-    modules: [
-      {
-        id: 1,
-        title: "JavaScript Fundamentals",
-        description:
-          "Pelajari dasar-dasar JavaScript modern dengan ES6+ features dan best practices",
-        duration: "3 minggu",
-        type: "Course",
-        difficulty: "Beginner",
-        completed: false,
-        locked: false,
-        lessons: 20,
-        projects: 5,
-        content: {
-          lessons: [
-            "ES6+ Features",
-            "DOM Manipulation",
-            "Async Programming",
-            "Error Handling",
-          ],
-          projects: ["Todo App", "Weather App"],
-          resources: [
-            { name: "MDN JavaScript Guide", url: "#", type: "Documentation" },
-            { name: "JavaScript.info", url: "#", type: "Tutorial" },
-          ],
-        },
-      },
-      {
-        id: 2,
-        title: "React.js Development",
-        description:
-          "Build modern web applications dengan React dan ecosystem yang powerful",
-        duration: "4 minggu",
-        type: "Framework",
-        difficulty: "Intermediate",
-        completed: false,
-        locked: true,
-        lessons: 25,
-        projects: 6,
-        content: {
-          lessons: [
-            "Components & JSX",
-            "State & Props",
-            "Hooks",
-            "Context API",
-          ],
-          projects: ["E-commerce App", "Social Media Dashboard"],
-          resources: [
-            { name: "React Documentation", url: "#", type: "Documentation" },
-            { name: "React Tutorial", url: "#", type: "Course" },
-          ],
-        },
-      },
-    ],
-  },
-  "Product Manager": {
-    title: "Product Manager Learning Path",
-    description:
-      "Menjadi product manager yang strategic dan data-driven dengan kemampuan leadership yang kuat",
-    totalModules: 10,
-    estimatedTime: "6-10 bulan",
-    difficulty: "Intermediate",
-    color: "from-purple-500 to-pink-500",
-    icon: Target,
-    category: "Business",
-    rating: 4.7,
-    students: 890,
-    modules: [
-      {
-        id: 1,
-        title: "Product Management Fundamentals",
-        description:
-          "Dasar-dasar product management dan strategy untuk membangun produk yang user-centric",
-        duration: "2 minggu",
-        type: "Theory",
-        difficulty: "Beginner",
-        completed: false,
-        locked: false,
-        lessons: 16,
-        projects: 3,
-        content: {
-          lessons: [
-            "Product Lifecycle",
-            "Market Research",
-            "User Personas",
-            "Product Strategy",
-          ],
-          projects: ["Product Requirements Document", "Market Analysis Report"],
-          resources: [
-            { name: "Product Management Course", url: "#", type: "Course" },
-            { name: "Inspired by Marty Cagan", url: "#", type: "Book" },
-          ],
-        },
-      },
-    ],
-  },
-  "UI/UX Designer": {
-    title: "UI/UX Designer Learning Path",
-    description:
-      "Menjadi designer yang user-centric dan kreatif dengan kemampuan research dan prototyping",
-    totalModules: 8,
-    estimatedTime: "4-8 bulan",
-    difficulty: "Beginner",
-    color: "from-pink-500 to-rose-500",
-    icon: Palette,
-    category: "Design",
-    rating: 4.6,
-    students: 1560,
-    modules: [
-      {
-        id: 1,
-        title: "Design Thinking Fundamentals",
-        description:
-          "Memahami proses design thinking dan user research untuk menciptakan solusi yang tepat",
-        duration: "2 minggu",
-        type: "Theory",
-        difficulty: "Beginner",
-        completed: false,
-        locked: false,
-        lessons: 14,
-        projects: 2,
-        content: {
-          lessons: [
-            "Design Process",
-            "User Research",
-            "Empathy Mapping",
-            "Problem Definition",
-          ],
-          projects: ["User Research Report", "Design Challenge"],
-          resources: [
-            { name: "Design Thinking Toolkit", url: "#", type: "Guide" },
-            { name: "IDEO Design Kit", url: "#", type: "Resource" },
-          ],
-        },
-      },
-    ],
-  },
-};
 
 export default function LearningPathPage() {
   const [user, setUser] = useState<any>(null);
@@ -303,8 +59,35 @@ export default function LearningPathPage() {
   const [filterDifficulty, setFilterDifficulty] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [careerRecommendations, setCareerRecommendations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Fetch career recommendations dari API
+  useEffect(() => {
+    const fetchCareerRecommendations = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/CareerRecommendation");
+        if (res.ok) {
+          const data = await res.json();
+          console.log("🔥 Career recommendations from API:", data.recommendations);
+          setCareerRecommendations(data.recommendations || []);
+        } else {
+          throw new Error('Failed to fetch career recommendations');
+        }
+      } catch (err) {
+        console.error("❌ Error fetching career recommendations:", err);
+        setError("Gagal memuat data karier");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCareerRecommendations();
+  }, []);
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
@@ -314,17 +97,116 @@ export default function LearningPathPage() {
 
     // Check if there's a specific career from URL params
     const careerParam = searchParams.get("career");
-    if (
-      careerParam &&
-      learningPaths[careerParam as keyof typeof learningPaths]
-    ) {
+    if (careerParam) {
       setSelectedPath(careerParam);
     }
   }, [searchParams]);
 
+  // Transform API data ke format yang dibutuhkan UI
+  const transformApiDataToLearningPaths = () => {
+    const learningPaths: { [key: string]: any } = {};
+
+    careerRecommendations.forEach((career) => {
+      const pathKey = career.careerName;
+      
+      // Tentukan icon berdasarkan kategori
+      const getIconByCategory = (category: string) => {
+        switch (category?.toLowerCase()) {
+          case 'technology': return Code;
+          case 'design': return Palette;
+          case 'business': case 'marketing': return Target;
+          case 'analytics': case 'data': return BarChart3;
+          default: return BookOpen;
+        }
+      };
+
+      // Tentukan warna berdasarkan kategori
+      const getColorByCategory = (category: string) => {
+        switch (category?.toLowerCase()) {
+          case 'technology': return 'from-blue-500 to-cyan-500';
+          case 'design': return 'from-pink-500 to-rose-500';
+          case 'business': case 'marketing': return 'from-purple-500 to-pink-500';
+          case 'analytics': case 'data': return 'from-emerald-500 to-teal-500';
+          default: return 'from-slate-500 to-slate-600';
+        }
+      };
+
+      // Transform learning milestones ke modules
+      const modules = career.learningMilestones?.map((milestone: any, index: number) => ({
+        id: index + 1,
+        title: milestone.achievement,
+        description: `Milestone pembelajaran bulan ke-${milestone.month} dengan fokus pada pengembangan skills yang dibutuhkan`,
+        duration: `${milestone.month} bulan`,
+        type: index === 0 ? "Course" : index % 2 === 0 ? "Hands-on" : "Theory",
+        difficulty: index < 2 ? "Beginner" : index < 4 ? "Intermediate" : "Advanced",
+        completed: false,
+        locked: index > 0, // Hanya modul pertama yang unlocked
+        lessons: 12 + (index * 3),
+        projects: 2 + index,
+        content: {
+          lessons: milestone.skills || [],
+          projects: [`Project ${index + 1}`, `Assignment ${index + 1}`],
+          resources: [
+            { name: "Online Course", url: "#", type: "Course" },
+            { name: "Documentation", url: "#", type: "Documentation" },
+          ],
+        },
+      })) || [];
+
+      learningPaths[pathKey] = {
+        title: `${career.careerName} Learning Path`,
+        description: career.description || `Menjadi ${career.careerName} yang handal dengan pembelajaran terstruktur dan komprehensif`,
+        totalModules: modules.length || 4,
+        estimatedTime: career.estimatedLearningTime || "6-12 bulan",
+        difficulty: career.difficulty || "Intermediate",
+        color: getColorByCategory(career.category),
+        icon: getIconByCategory(career.category),
+        category: career.category || "Technology",
+        rating: (career.aiScore / 20) || 4.5, // Convert AI score to rating (0-5)
+        students: Math.floor(Math.random() * 2000) + 500, // Random students count
+        modules: modules.length > 0 ? modules : [
+          {
+            id: 1,
+            title: "Fundamentals",
+            description: "Pelajari dasar-dasar yang dibutuhkan untuk memulai karier ini",
+            duration: "4 minggu",
+            type: "Course",
+            difficulty: "Beginner",
+            completed: false,
+            locked: false,
+            lessons: 15,
+            projects: 3,
+            content: {
+              lessons: career.requiredSkills?.slice(0, 4) || ["Skill 1", "Skill 2"],
+              projects: ["Beginner Project", "Practice Assignment"],
+              resources: [
+                { name: "Getting Started Guide", url: "#", type: "Documentation" },
+                { name: "Video Tutorial", url: "#", type: "Video" },
+              ],
+            },
+          }
+        ],
+        // Data tambahan dari API
+        salaryRange: career.salaryRange,
+        growthRate: career.growthRate,
+        requiredSkills: career.requiredSkills,
+        softSkills: career.softSkills,
+        tools: career.tools,
+        careerPath: career.careerPath,
+        marketDemand: career.marketDemand,
+        workType: career.workType,
+        aiScore: career.aiScore,
+      };
+    });
+
+    return learningPaths;
+  };
+
+  const learningPaths = transformApiDataToLearningPaths();
+
   const getCurrentPath = () => {
     if (!selectedPath) return null;
-    return learningPaths[selectedPath as keyof typeof learningPaths];
+    return learningPaths[selectedPath];
   };
 
   const getPathProgress = (path: any) => {
@@ -345,8 +227,8 @@ export default function LearningPathPage() {
     if (!selectedPath) return;
 
     // Update module completion status
-    const pathData = learningPaths[selectedPath as keyof typeof learningPaths];
-    const moduleIndex = pathData.modules.findIndex((m) => m.id === moduleId);
+    const pathData = learningPaths[selectedPath];
+    const moduleIndex = pathData.modules.findIndex((m: any) => m.id === moduleId);
     if (moduleIndex !== -1) {
       pathData.modules[moduleIndex].completed = true;
 
@@ -362,6 +244,8 @@ export default function LearningPathPage() {
       localStorage.setItem("user", JSON.stringify(userData));
 
       setShowModuleModal(false);
+      // Force re-render
+      setCareerRecommendations([...careerRecommendations]);
     }
   };
 
@@ -403,6 +287,53 @@ export default function LearningPathPage() {
     }
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="flex h-screen w-screen overflow-hidden">
+          <Sidebar
+            isExpanded={isSidebarExpanded}
+            onToggleExpanded={() => setIsSidebarExpanded(prev => !prev)}
+          />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Memuat learning paths...</p>
+            </div>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <AuthGuard>
+        <div className="flex h-screen w-screen overflow-hidden">
+          <Sidebar
+            isExpanded={isSidebarExpanded}
+            onToggleExpanded={() => setIsSidebarExpanded(prev => !prev)}
+          />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center max-w-md">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">Terjadi Kesalahan</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>
+                Muat Ulang
+              </Button>
+            </div>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  // Jika memilih specific path
   if (selectedPath) {
     const currentPath = getCurrentPath();
     if (!currentPath) return null;
@@ -420,7 +351,7 @@ export default function LearningPathPage() {
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-auto">
               <div className="px-6 py-8 space-y-6">
-                {/* Enhanced Header with Breadcrumb */}
+                {/* Enhanced Header with API Data */}
                 <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
                   <div className="absolute inset-0 bg-black/10" />
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
@@ -437,8 +368,7 @@ export default function LearningPathPage() {
                           Kembali
                         </Button>
                         <div className="text-white/60 text-xs">
-                          Learning Paths / {currentPath.category} /{" "}
-                          {currentPath.title}
+                          Learning Paths / {currentPath.category} / {currentPath.title}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -449,20 +379,11 @@ export default function LearningPathPage() {
                           <Share2 className="w-3 h-3 mr-1" />
                           Share
                         </Button>
-                        <Button
-                          size="sm"
-                          className="bg-white/20 text-white border border-white/30 hover:bg-white/30 rounded-lg text-xs"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </Button>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-6">
-                      <div
-                        className={`w-16 h-16 bg-gradient-to-br ${currentPath.color} rounded-2xl flex items-center justify-center shadow-lg`}
-                      >
+                      <div className={`w-16 h-16 bg-gradient-to-br ${currentPath.color} rounded-2xl flex items-center justify-center shadow-lg`}>
                         <IconComponent className="w-8 h-8 text-white" />
                       </div>
                       <div className="flex-1">
@@ -476,7 +397,7 @@ export default function LearningPathPage() {
                           <div className="flex items-center gap-2">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
                             <span className="text-white text-sm font-semibold">
-                              {currentPath.rating}
+                              {currentPath.rating.toFixed(1)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -488,13 +409,18 @@ export default function LearningPathPage() {
                           <Badge className="bg-white/20 text-white border border-white/30 px-3 py-1 text-xs">
                             {currentPath.difficulty}
                           </Badge>
+                          {currentPath.aiScore && (
+                            <Badge className="bg-white/20 text-white border border-white/30 px-3 py-1 text-xs">
+                              AI Score: {currentPath.aiScore}%
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 </Card>
 
-                {/* Path Statistics */}
+                {/* Enhanced Path Statistics dengan data API */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
@@ -504,12 +430,8 @@ export default function LearningPathPage() {
                           <BookOpen className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <div className="text-xl font-bold">
-                            {currentPath.totalModules}
-                          </div>
-                          <div className="text-white/80 text-xs">
-                            Total Modul
-                          </div>
+                          <div className="text-xl font-bold">{currentPath.totalModules}</div>
+                          <div className="text-white/80 text-xs">Total Modul</div>
                         </div>
                       </div>
                     </div>
@@ -520,17 +442,11 @@ export default function LearningPathPage() {
                     <div className="relative p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                          <CheckCircle className="w-5 h-5 text-white" />
+                          <TrendingUp className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <div className="text-xl font-bold">
-                            {
-                              currentPath.modules.filter(
-                                (m: any) => m.completed
-                              ).length
-                            }
-                          </div>
-                          <div className="text-white/80 text-xs">Selesai</div>
+                          <div className="text-sm font-bold">{currentPath.salaryRange || "Competitive"}</div>
+                          <div className="text-white/80 text-xs">Gaji</div>
                         </div>
                       </div>
                     </div>
@@ -544,9 +460,7 @@ export default function LearningPathPage() {
                           <Clock className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <div className="text-lg font-bold">
-                            {currentPath.estimatedTime}
-                          </div>
+                          <div className="text-lg font-bold">{currentPath.estimatedTime}</div>
                           <div className="text-white/80 text-xs">Estimasi</div>
                         </div>
                       </div>
@@ -558,12 +472,10 @@ export default function LearningPathPage() {
                     <div className="relative p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                          <TrendingUp className="w-5 h-5 text-white" />
+                          <Target className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <div className="text-xl font-bold">
-                            {Math.round(getPathProgress(currentPath))}%
-                          </div>
+                          <div className="text-xl font-bold">{Math.round(getPathProgress(currentPath))}%</div>
                           <div className="text-white/80 text-xs">Progress</div>
                         </div>
                       </div>
@@ -577,13 +489,16 @@ export default function LearningPathPage() {
                     <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
                       Progress Overview
                     </h2>
-                    <Badge
-                      className={`px-3 py-1 text-xs ${getDifficultyColor(
-                        currentPath.difficulty
-                      )}`}
-                    >
-                      {currentPath.difficulty} Level
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className={`px-3 py-1 text-xs ${getDifficultyColor(currentPath.difficulty)}`}>
+                        {currentPath.difficulty} Level
+                      </Badge>
+                      {currentPath.marketDemand && (
+                        <Badge variant="outline" className="px-3 py-1 text-xs">
+                          {currentPath.marketDemand} Demand
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="mb-4">
                     <div className="flex justify-between items-center mb-2">
@@ -594,11 +509,38 @@ export default function LearningPathPage() {
                         {Math.round(getPathProgress(currentPath))}% selesai
                       </span>
                     </div>
-                    <Progress
-                      value={getPathProgress(currentPath)}
-                      className="h-2"
-                    />
+                    <Progress value={getPathProgress(currentPath)} className="h-2" />
                   </div>
+
+                  {/* Growth Rate dan Work Type */}
+                  {(currentPath.growthRate || currentPath.workType) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {currentPath.growthRate && (
+                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <div className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">
+                            Pertumbuhan Karier
+                          </div>
+                          <div className="text-sm font-semibold text-green-800 dark:text-green-200">
+                            {currentPath.growthRate}
+                          </div>
+                        </div>
+                      )}
+                      {currentPath.workType && currentPath.workType.length > 0 && (
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                            Tipe Pekerjaan
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {currentPath.workType.map((type: string, index: number) => (
+                              <Badge key={index} className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200">
+                                {type}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
 
                 {/* Modules List */}
@@ -645,17 +587,10 @@ export default function LearningPathPage() {
                               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
                                 {module.title}
                               </h3>
-                              <Badge
-                                variant="outline"
-                                className="text-xs px-2 py-0.5"
-                              >
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">
                                 {module.type}
                               </Badge>
-                              <Badge
-                                className={`text-xs px-2 py-0.5 ${getDifficultyColor(
-                                  module.difficulty
-                                )}`}
-                              >
+                              <Badge className={`text-xs px-2 py-0.5 ${getDifficultyColor(module.difficulty)}`}>
                                 {module.difficulty}
                               </Badge>
                             </div>
@@ -706,6 +641,64 @@ export default function LearningPathPage() {
                     ))}
                   </div>
                 </Card>
+
+                {/* Additional Career Info dari API */}
+                {(currentPath.requiredSkills || currentPath.softSkills || currentPath.tools) && (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Required Skills */}
+                    {currentPath.requiredSkills && currentPath.requiredSkills.length > 0 && (
+                      <Card className="p-6 border-0 shadow-lg bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                          <Zap className="w-5 h-5 text-orange-500" />
+                          Required Skills
+                        </h3>
+                        <div className="space-y-2">
+                          {currentPath.requiredSkills.slice(0, 5).map((skill: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                              <Star className="w-3 h-3 text-orange-500" />
+                              <span className="text-xs text-orange-700 dark:text-orange-300">{skill}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* Soft Skills */}
+                    {currentPath.softSkills && currentPath.softSkills.length > 0 && (
+                      <Card className="p-6 border-0 shadow-lg bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                          <Users className="w-5 h-5 text-purple-500" />
+                          Soft Skills
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {currentPath.softSkills.map((skill: string, index: number) => (
+                            <Badge key={index} className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* Tools */}
+                    {currentPath.tools && currentPath.tools.length > 0 && (
+                      <Card className="p-6 border-0 shadow-lg bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                          <Award className="w-5 h-5 text-blue-500" />
+                          Tools & Technologies
+                        </h3>
+                        <div className="space-y-2">
+                          {currentPath.tools.slice(0, 5).map((tool: string, index: number) => (
+                            <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                              <span className="text-xs text-blue-700 dark:text-blue-300">{tool}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -723,6 +716,7 @@ export default function LearningPathPage() {
     );
   }
 
+  // Main Learning Paths Grid dengan data dari API
   return (
     <AuthGuard>
       <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -734,7 +728,7 @@ export default function LearningPathPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-auto">
             <div className="px-6 py-8 space-y-6">
-              {/* Header Section */}
+              {/* Header Section dengan statistik dari API */}
               <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
                 <div className="absolute inset-0 bg-black/10" />
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
@@ -749,13 +743,12 @@ export default function LearningPathPage() {
                           Learning Paths
                         </h1>
                         <p className="text-white/90 text-sm">
-                          Pilih jalur pembelajaran yang sesuai dengan tujuan
-                          karier Anda
+                          Pilih jalur pembelajaran yang sesuai dengan rekomendasi AI untuk karier Anda
                         </p>
                       </div>
                     </div>
 
-                    {/* Quick Stats */}
+                    {/* Quick Stats dari API */}
                     <div className="flex items-center gap-4">
                       <Card className="p-4 bg-white/95 backdrop-blur-sm border-0 shadow-lg rounded-xl">
                         <div className="text-center">
@@ -765,19 +758,19 @@ export default function LearningPathPage() {
                           <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                             {Object.keys(learningPaths).length}
                           </div>
-                          <div className="text-xs text-slate-600">Paths</div>
+                          <div className="text-xs text-slate-600">AI Paths</div>
                         </div>
                       </Card>
 
                       <Card className="p-4 bg-white/95 backdrop-blur-sm border-0 shadow-lg rounded-xl">
                         <div className="text-center">
                           <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center mx-auto mb-2 shadow-lg">
-                            <Users className="w-4 h-4 text-white" />
+                            <Brain className="w-4 h-4 text-white" />
                           </div>
                           <div className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                            5.4K
+                            {careerRecommendations.length}
                           </div>
-                          <div className="text-xs text-slate-600">Students</div>
+                          <div className="text-xs text-slate-600">Careers</div>
                         </div>
                       </Card>
                     </div>
@@ -806,14 +799,10 @@ export default function LearningPathPage() {
                       {["Beginner", "Intermediate", "Advanced"].map((level) => (
                         <Button
                           key={level}
-                          variant={
-                            filterDifficulty === level ? "default" : "outline"
-                          }
+                          variant={filterDifficulty === level ? "default" : "outline"}
                           size="sm"
                           onClick={() =>
-                            setFilterDifficulty(
-                              filterDifficulty === level ? null : level
-                            )
+                            setFilterDifficulty(filterDifficulty === level ? null : level)
                           }
                           className="rounded-lg text-xs px-3 py-1 h-7"
                         >
@@ -826,34 +815,26 @@ export default function LearningPathPage() {
                       <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                         Category:
                       </span>
-                      {["Technology", "Design", "Business", "Analytics"].map(
-                        (category) => (
-                          <Button
-                            key={category}
-                            variant={
-                              filterCategory === category
-                                ? "default"
-                                : "outline"
-                            }
-                            size="sm"
-                            onClick={() =>
-                              setFilterCategory(
-                                filterCategory === category ? null : category
-                              )
-                            }
-                            className="rounded-lg text-xs px-3 py-1 h-7"
-                          >
-                            {category}
-                          </Button>
-                        )
-                      )}
+                      {["Technology", "Design", "Business", "Analytics", "Marketing"].map((category) => (
+                        <Button
+                          key={category}
+                          variant={filterCategory === category ? "default" : "outline"}
+                          size="sm"
+                          onClick={() =>
+                            setFilterCategory(filterCategory === category ? null : category)
+                          }
+                          className="rounded-lg text-xs px-3 py-1 h-7"
+                        >
+                          {category}
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 </div>
               </Card>
 
-              {/* Learning Paths Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3  gap-6">
+              {/* Learning Paths Grid dari API */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {filteredPaths.map(([pathName, path], index) => {
                   const IconComponent = path.icon;
                   return (
@@ -862,37 +843,31 @@ export default function LearningPathPage() {
                       className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm"
                       onClick={() => setSelectedPath(pathName)}
                     >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${path.color} opacity-5 group-hover:opacity-10 transition-opacity`}
-                      />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${path.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
                       <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-12 translate-x-12" />
 
                       <div className="relative p-5">
                         {/* Header */}
                         <div className="flex items-center gap-4 mb-4">
-                          <div
-                            className={`w-12 h-12 bg-gradient-to-br ${path.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                          >
+                          <div className={`w-12 h-12 bg-gradient-to-br ${path.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                             <IconComponent className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1">
                             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">
-                              {path.title}
+                              {pathName}
                             </h3>
                             <div className="flex items-center gap-2">
-                              <Badge
-                                className={`text-xs px-2 py-0.5 ${getDifficultyColor(
-                                  path.difficulty
-                                )}`}
-                              >
+                              <Badge className={`text-xs px-2 py-0.5 ${getDifficultyColor(path.difficulty)}`}>
                                 {path.difficulty}
                               </Badge>
-                              <Badge
-                                variant="outline"
-                                className="text-xs px-2 py-0.5"
-                              >
+                              <Badge variant="outline" className="text-xs px-2 py-0.5">
                                 {path.category}
                               </Badge>
+                              {path.aiScore && (
+                                <Badge className="text-xs px-2 py-0.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-purple-200">
+                                  AI: {path.aiScore}%
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -908,19 +883,27 @@ export default function LearningPathPage() {
                             <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
                               {path.totalModules}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">
-                              Modul
-                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">Modul</div>
                           </div>
                           <div className="text-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                            <div className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                            <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
                               {path.estimatedTime}
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">
-                              Estimasi
-                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">Estimasi</div>
                           </div>
                         </div>
+
+                        {/* Salary Range */}
+                        {path.salaryRange && (
+                          <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">
+                              Rentang Gaji
+                            </div>
+                            <div className="text-sm font-bold text-green-800 dark:text-green-200">
+                              {path.salaryRange}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Progress */}
                         <div className="mb-4">
@@ -932,10 +915,7 @@ export default function LearningPathPage() {
                               {Math.round(getPathProgress(path))}%
                             </span>
                           </div>
-                          <Progress
-                            value={getPathProgress(path)}
-                            className="h-2"
-                          />
+                          <Progress value={getPathProgress(path)} className="h-2" />
                         </div>
 
                         {/* Footer Stats */}
@@ -943,15 +923,11 @@ export default function LearningPathPage() {
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                               <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                              <span className="text-sm font-medium">
-                                {path.rating}
-                              </span>
+                              <span className="text-sm font-medium">{path.rating.toFixed(1)}</span>
                             </div>
                             <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                              <Users className="w-4 h-4" />
-                              <span className="text-sm">
-                                {path.students.toLocaleString()}
-                              </span>
+                              <Brain className="w-4 h-4 text-purple-500" />
+                              <span className="text-sm">AI Generated</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-medium">
@@ -966,7 +942,7 @@ export default function LearningPathPage() {
               </div>
 
               {/* No Results */}
-              {filteredPaths.length === 0 && (
+              {filteredPaths.length === 0 && !loading && (
                 <Card className="p-12 text-center border-0 shadow-lg bg-white/80 dark:bg-slate-900/60 backdrop-blur-sm">
                   <div className="w-16 h-16 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Search className="w-8 h-8 text-slate-400" />
@@ -975,20 +951,34 @@ export default function LearningPathPage() {
                     Tidak ada hasil ditemukan
                   </h3>
                   <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm">
-                    Coba ubah filter atau kata kunci pencarian Anda
+                    {careerRecommendations.length === 0 
+                      ? "Belum ada rekomendasi karier. Silakan ambil assessment terlebih dahulu."
+                      : "Coba ubah filter atau kata kunci pencarian Anda"
+                    }
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSearchTerm("");
-                      setFilterDifficulty(null);
-                      setFilterCategory(null);
-                    }}
-                    className="px-6 py-2 rounded-lg"
-                  >
-                    Reset Filter
-                  </Button>
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setFilterDifficulty(null);
+                        setFilterCategory(null);
+                      }}
+                      className="px-6 py-2 rounded-lg"
+                    >
+                      Reset Filter
+                    </Button>
+                    {careerRecommendations.length === 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => router.push('/profile/assessment')}
+                        className="px-6 py-2 rounded-lg"
+                      >
+                        Ambil Assessment
+                      </Button>
+                    )}
+                  </div>
                 </Card>
               )}
             </div>

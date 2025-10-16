@@ -318,6 +318,7 @@ export default function CareerMapperPage() {
                         viewMode={viewMode}
                         onViewDetail={() => handleCareerDetail(career.name)}
                         onViewRoadmap={() => handleCareerRoadmap(career.name)}
+                        onViewLearningPath={() => handleViewLearningPath(career.name)} // ← Tambah handler untuk Learning Path
                         getDifficultyColor={getDifficultyColor}
                         getCategoryIcon={getCategoryIcon}
                         getDemandColor={getDemandColor}
@@ -735,6 +736,7 @@ function CareerCard({
   viewMode, 
   onViewDetail,
   onViewRoadmap,
+  onViewLearningPath, // ← Tambah prop baru
   getDifficultyColor, 
   getCategoryIcon, 
   getDemandColor,
@@ -798,6 +800,17 @@ function CareerCard({
               >
                 <Map className="w-3 h-3 mr-1" />
                 Roadmap
+              </Button>
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onViewLearningPath()
+                }}
+                className="text-xs"
+              >
+                <BookOpen className="w-3 h-3 mr-1" />
+                Learning
               </Button>
             </div>
           </div>
@@ -918,6 +931,17 @@ function CareerCard({
           >
             <Map className="w-3 h-3 mr-1" />
             Lihat Roadmap
+          </Button>
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onViewLearningPath()
+            }}
+            className="text-xs"
+          >
+            <BookOpen className="w-3 h-3 mr-1" />
+            Lihat Learning
           </Button>
         </div>
       </div>
