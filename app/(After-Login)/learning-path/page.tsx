@@ -46,9 +46,13 @@ import {
   PenTool,
   Database,
   AlertCircle,
+  Lock, // ← Tambah import yang hilang
+  Sparkles, // ← Tambah import yang hilang
+  Trophy, // ← Tambah import yang hilang
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function LearningPathPage() {
   const [user, setUser] = useState<any>(null);
@@ -141,17 +145,61 @@ export default function LearningPathPage() {
         difficulty: index < 2 ? "Beginner" : index < 4 ? "Intermediate" : "Advanced",
         completed: false,
         locked: index > 0, // Hanya modul pertama yang unlocked
-        lessons: 12 + (index * 3),
+        progress: 0,
+        lessons: 8 + (index * 2),
         projects: 2 + index,
         content: {
-          lessons: milestone.skills || [],
-          projects: [`Project ${index + 1}`, `Assignment ${index + 1}`],
+          lessons: milestone.skills || [
+            `Foundation of ${milestone.achievement}`,
+            `Core Concepts`,
+            `Practical Applications`,
+            `Advanced Techniques`,
+            `Best Practices`
+          ],
+          projects: [
+            `Project ${index + 1}: Practical Implementation`,
+            `Assignment ${index + 1}: Real-world Application`
+          ],
           resources: [
             { name: "Online Course", url: "#", type: "Course" },
             { name: "Documentation", url: "#", type: "Documentation" },
+            { name: "Video Tutorial", url: "#", type: "Video" },
           ],
         },
       })) || [];
+
+      // Ensure at least one module exists and first one is unlocked
+      if (modules.length === 0) {
+        modules.push({
+          id: 1,
+          title: "Fundamentals",
+          description: "Pelajari dasar-dasar yang dibutuhkan untuk memulai karier ini",
+          duration: "4 minggu",
+          type: "Course",
+          difficulty: "Beginner",
+          completed: false,
+          locked: false, // First module always unlocked
+          progress: 0,
+          lessons: 15,
+          projects: 3,
+          content: {
+            lessons: career.requiredSkills?.slice(0, 4) || [
+              "Introduction to the field",
+              "Basic concepts and terminology",
+              "Essential tools and technologies",
+              "Getting started with practical work"
+            ],
+            projects: ["Beginner Project", "Practice Assignment"],
+            resources: [
+              { name: "Getting Started Guide", url: "#", type: "Documentation" },
+              { name: "Video Tutorial", url: "#", type: "Video" },
+            ],
+          },
+        });
+      } else {
+        // Ensure first module is always unlocked
+        modules[0].locked = false;
+      }
 
       learningPaths[pathKey] = {
         title: `${career.careerName} Learning Path`,
@@ -164,28 +212,7 @@ export default function LearningPathPage() {
         category: career.category || "Technology",
         rating: (career.aiScore / 20) || 4.5, // Convert AI score to rating (0-5)
         students: Math.floor(Math.random() * 2000) + 500, // Random students count
-        modules: modules.length > 0 ? modules : [
-          {
-            id: 1,
-            title: "Fundamentals",
-            description: "Pelajari dasar-dasar yang dibutuhkan untuk memulai karier ini",
-            duration: "4 minggu",
-            type: "Course",
-            difficulty: "Beginner",
-            completed: false,
-            locked: false,
-            lessons: 15,
-            projects: 3,
-            content: {
-              lessons: career.requiredSkills?.slice(0, 4) || ["Skill 1", "Skill 2"],
-              projects: ["Beginner Project", "Practice Assignment"],
-              resources: [
-                { name: "Getting Started Guide", url: "#", type: "Documentation" },
-                { name: "Video Tutorial", url: "#", type: "Video" },
-              ],
-            },
-          }
-        ],
+        modules: modules,
         // Data tambahan dari API
         salaryRange: career.salaryRange,
         growthRate: career.growthRate,
@@ -209,43 +236,98 @@ export default function LearningPathPage() {
     return learningPaths[selectedPath];
   };
 
+  // Improved module completion handler
+  const handleModuleComplete = (moduleId: number, progress: number) => {
+    if (!selectedPath || progress < 100) return;
+
+    console.log(`🎯 Completing module ${moduleId} with ${progress}% progress`);
+
+    // Update module completion status
+    const pathData = learningPaths[selectedPath];
+    const moduleIndex = pathData.modules.findIndex((m: any) => m.id === moduleId);
+    
+    if (moduleIndex !== -1) {
+      // Mark current module as completed
+      pathData.modules[moduleIndex].completed = true;
+      pathData.modules[moduleIndex].progress = 100;
+
+      console.log(`✅ Module ${moduleId} marked as completed`);
+
+      // Unlock next module
+      if (moduleIndex + 1 < pathData.modules.length) {
+        pathData.modules[moduleIndex + 1].locked = false;
+        console.log(`🔓 Module ${pathData.modules[moduleIndex + 1].id} unlocked`);
+      }
+
+      // Save progress to localStorage with detailed tracking
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      userData.learningProgress = userData.learningProgress || {};
+      userData.learningProgress[selectedPath] = {
+        ...pathData,
+        lastUpdated: new Date().toISOString(),
+        completedModules: pathData.modules.filter((m: any) => m.completed).length,
+        totalModules: pathData.modules.length,
+        overallProgress: (pathData.modules.filter((m: any) => m.completed).length / pathData.modules.length) * 100
+      };
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      console.log(`💾 Progress saved to localStorage`);
+      
+      // Force re-render to update UI immediately
+      setCareerRecommendations([...careerRecommendations]);
+
+      // Check if entire path is completed
+      const allCompleted = pathData.modules.every((m: any) => m.completed);
+      if (allCompleted) {
+        // Show path completion celebration
+        setTimeout(() => {
+          alert(`🎉 Congratulations! You've completed the entire ${pathData.title}!`);
+        }, 1000);
+      }
+
+      console.log(`🔄 UI updated, module unlock should be visible`);
+    }
+  };
+
+  // Load saved progress on component mount
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("user") || "{}");
+    if (userData.learningProgress && Object.keys(learningPaths).length > 0) {
+      // Restore saved progress
+      Object.keys(learningPaths).forEach(pathKey => {
+        const savedProgress = userData.learningProgress[pathKey];
+        if (savedProgress && savedProgress.modules) {
+          // Update modules with saved progress
+          learningPaths[pathKey].modules = savedProgress.modules;
+        }
+      });
+      // Force re-render
+      setCareerRecommendations([...careerRecommendations]);
+    }
+  }, [Object.keys(learningPaths).length]);
+
+  // Enhanced progress calculation
   const getPathProgress = (path: any) => {
-    const completedModules = path.modules.filter(
-      (module: any) => module.completed
-    ).length;
-    return (completedModules / path.modules.length) * 100;
+    if (!path.modules || path.modules.length === 0) return 0;
+    
+    const completedModules = path.modules.filter((module: any) => module.completed).length;
+    const totalModules = path.modules.length;
+    
+    // Also account for partial progress in current module
+    const partialProgress = path.modules.reduce((acc: number, module: any) => {
+      if (!module.completed && module.progress) {
+        return acc + (module.progress / totalModules);
+      }
+      return acc;
+    }, 0);
+    
+    return Math.min(((completedModules / totalModules) * 100) + partialProgress, 100);
   };
 
   const handleModuleClick = (module: any) => {
     if (!module.locked) {
       setSelectedModule(module);
       setShowModuleModal(true);
-    }
-  };
-
-  const handleModuleComplete = (moduleId: number) => {
-    if (!selectedPath) return;
-
-    // Update module completion status
-    const pathData = learningPaths[selectedPath];
-    const moduleIndex = pathData.modules.findIndex((m: any) => m.id === moduleId);
-    if (moduleIndex !== -1) {
-      pathData.modules[moduleIndex].completed = true;
-
-      // Unlock next module
-      if (moduleIndex + 1 < pathData.modules.length) {
-        pathData.modules[moduleIndex + 1].locked = false;
-      }
-
-      // Save to localStorage
-      const userData = JSON.parse(localStorage.getItem("user") || "{}");
-      userData.learningProgress = userData.learningProgress || {};
-      userData.learningProgress[selectedPath] = pathData;
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      setShowModuleModal(false);
-      // Force re-render
-      setCareerRecommendations([...careerRecommendations]);
     }
   };
 
@@ -545,101 +627,269 @@ export default function LearningPathPage() {
 
                 {/* Modules List */}
                 <Card className="p-6 border-0 shadow-lg bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
-                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-4">
-                    Modul Pembelajaran
-                  </h2>
-                  <div className="space-y-4">
-                    {currentPath.modules.map((module: any, index: number) => (
-                      <Card
-                        key={module.id}
-                        className={`group p-5 cursor-pointer transition-all duration-300 hover:shadow-lg border ${
-                          module.locked
-                            ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50"
-                            : module.completed
-                            ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800 hover:scale-[1.01]"
-                            : "hover:scale-[1.01] hover:shadow-lg"
-                        }`}
-                        onClick={() => handleModuleClick(module)}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="flex-shrink-0">
-                            <div
-                              className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
-                                module.completed
-                                  ? "bg-gradient-to-br from-emerald-500 to-teal-500"
-                                  : module.locked
-                                  ? "bg-slate-300 dark:bg-slate-600"
-                                  : `bg-gradient-to-br ${currentPath.color}`
-                              }`}
-                            >
-                              {module.completed ? (
-                                <CheckCircle className="w-6 h-6 text-white" />
-                              ) : module.locked ? (
-                                <Shield className="w-6 h-6 text-white" />
-                              ) : (
-                                getTypeIcon(module.type)
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-                                {module.title}
-                              </h3>
-                              <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                {module.type}
-                              </Badge>
-                              <Badge className={`text-xs px-2 py-0.5 ${getDifficultyColor(module.difficulty)}`}>
-                                {module.difficulty}
-                              </Badge>
-                            </div>
-
-                            <p className="text-slate-600 dark:text-slate-400 mb-2 text-sm line-clamp-2">
-                              {module.description}
-                            </p>
-
-                            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{module.duration}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <BookOpen className="w-3 h-3" />
-                                <span>{module.lessons} lessons</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Code className="w-3 h-3" />
-                                <span>{module.projects} projects</span>
-                              </div>
-                              {module.completed && (
-                                <div className="flex items-center gap-1 text-green-600">
-                                  <CheckCircle className="w-3 h-3" />
-                                  <span className="font-medium">Selesai</span>
-                                </div>
-                              )}
-                              {module.locked && (
-                                <div className="flex items-center gap-1 text-slate-400">
-                                  <Shield className="w-3 h-3" />
-                                  <span>Terkunci</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex-shrink-0">
-                            <ChevronRight
-                              className={`w-5 h-5 transition-all ${
-                                module.locked
-                                  ? "text-slate-300"
-                                  : "text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-1"
-                              }`}
-                            />
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                      Modul Pembelajaran
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                        {currentPath.modules.filter((m: any) => m.completed).length} / {currentPath.modules.length} Completed
+                      </Badge>
+                      {getPathProgress(currentPath) === 100 && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200">
+                          <Trophy className="w-3 h-3 mr-1" />
+                          Path Completed!
+                        </Badge>
+                      )}
+                    </div>
                   </div>
+
+                  <div className="space-y-4">
+                    {currentPath.modules.map((module: any, index: number) => {
+                      const isCompleted = module.completed;
+                      const isLocked = module.locked;
+                      const canStart = !isLocked && !isCompleted;
+                      const isNext = !isCompleted && !isLocked && 
+                        (index === 0 || currentPath.modules[index - 1]?.completed);
+
+                      return (
+                        <motion.div
+                          key={module.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Card
+                            className={`group p-6 cursor-pointer transition-all duration-300 border-2 ${
+                              isLocked
+                                ? "opacity-60 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                                : isCompleted
+                                ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-700 hover:border-emerald-400 hover:shadow-lg"
+                                : isNext
+                                ? "bg-blue-50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-700 hover:border-blue-400 hover:shadow-xl ring-2 ring-blue-200 dark:ring-blue-800"
+                                : canStart
+                                ? "hover:border-indigo-300 hover:shadow-lg border-slate-200 dark:border-slate-700"
+                                : "border-slate-200 dark:border-slate-700"
+                            }`}
+                            onClick={() => !isLocked && handleModuleClick(module)}
+                          >
+                            {/* Enhanced visual indicators */}
+                            <div className="flex items-center gap-5">
+                              <div className="flex-shrink-0 relative">
+                                <div
+                                  className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
+                                    isCompleted
+                                      ? "bg-gradient-to-br from-emerald-500 to-teal-500"
+                                      : isLocked
+                                      ? "bg-slate-300 dark:bg-slate-600"
+                                      : isNext
+                                      ? `bg-gradient-to-br from-blue-500 to-cyan-500 ring-4 ring-blue-200 dark:ring-blue-800`
+                                      : `bg-gradient-to-br ${currentPath.color}`
+                                  }`}
+                                >
+                                  {isCompleted ? (
+                                    <CheckCircle className="w-8 h-8 text-white" />
+                                  ) : isLocked ? (
+                                    <Lock className="w-8 h-8 text-white" />
+                                  ) : isNext ? (
+                                    <motion.div
+                                      animate={{ scale: [1, 1.1, 1] }}
+                                      transition={{ duration: 2, repeat: Infinity }}
+                                    >
+                                      <Sparkles className="w-8 h-8 text-white" />
+                                    </motion.div>
+                                  ) : (
+                                    getTypeIcon(module.type)
+                                  )}
+                                </div>
+                                
+                                {/* Module Number Badge */}
+                                <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 border-white dark:border-slate-900 ${
+                                  isCompleted ? 'bg-emerald-500 text-white' :
+                                  isNext ? 'bg-blue-500 text-white' :
+                                  isLocked ? 'bg-slate-400 text-white' :
+                                  'bg-indigo-500 text-white'
+                                }`}>
+                                  {index + 1}
+                                </div>
+                              </div>
+
+                              {/* Module content with better status indicators */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <h3 className={`text-xl font-bold transition-colors ${
+                                        isCompleted 
+                                          ? 'text-emerald-800 dark:text-emerald-200'
+                                          : isNext
+                                          ? 'text-blue-800 dark:text-blue-200'
+                                          : isLocked
+                                          ? 'text-slate-500 dark:text-slate-400'
+                                          : 'text-slate-800 dark:text-slate-200'
+                                      }`}>
+                                        {module.title}
+                                      </h3>
+                                      
+                                      {/* Enhanced Status Badges */}
+                                      <div className="flex gap-2">
+                                        <Badge variant="outline" className="text-xs px-2 py-1">
+                                          {module.type}
+                                        </Badge>
+                                        <Badge className={`text-xs px-2 py-1 ${getDifficultyColor(module.difficulty)}`}>
+                                          {module.difficulty}
+                                        </Badge>
+                                        {isNext && (
+                                          <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700 text-xs px-2 py-1">
+                                            <Sparkles className="w-3 h-3 mr-1" />
+                                            Ready to Start
+                                          </Badge>
+                                        )}
+                                        {isCompleted && (
+                                          <Badge className="bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-700 text-xs px-2 py-1">
+                                            <Trophy className="w-3 h-3 mr-1" />
+                                            Completed
+                                          </Badge>
+                                        )}
+                                        {isLocked && (
+                                          <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600 text-xs px-2 py-1">
+                                            <Lock className="w-3 h-3 mr-1" />
+                                            Locked
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <p className={`text-sm leading-relaxed mb-3 ${
+                                      isLocked ? 'text-slate-400' : 'text-slate-600 dark:text-slate-400'
+                                    }`}>
+                                      {module.description}
+                                    </p>
+
+                                    {/* Module Stats */}
+                                    <div className="flex items-center gap-6 text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Clock className={`w-4 h-4 ${isLocked ? 'text-slate-400' : 'text-slate-500'}`} />
+                                        <span className={isLocked ? 'text-slate-400' : 'text-slate-600 dark:text-slate-400'}>
+                                          {module.duration}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <BookOpen className={`w-4 h-4 ${isLocked ? 'text-slate-400' : 'text-slate-500'}`} />
+                                        <span className={isLocked ? 'text-slate-400' : 'text-slate-600 dark:text-slate-400'}>
+                                          {module.lessons} lessons
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Code className={`w-4 h-4 ${isLocked ? 'text-slate-400' : 'text-slate-500'}`} />
+                                        <span className={isLocked ? 'text-slate-400' : 'text-slate-600 dark:text-slate-400'}>
+                                          {module.projects} projects
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Progress Bar for partial completion */}
+                                    {module.progress && module.progress > 0 && module.progress < 100 && (
+                                      <div className="mt-3">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span className="text-xs text-slate-600 dark:text-slate-400">
+                                            Progress
+                                          </span>
+                                          <span className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                                            {Math.round(module.progress)}%
+                                          </span>
+                                        </div>
+                                        <Progress value={module.progress} className="h-2" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Action Button */}
+                                  <div className="flex-shrink-0 ml-4">
+                                    {isLocked ? (
+                                      <div className="text-slate-400 text-sm text-center p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                                        <Lock className="w-6 h-6 mx-auto mb-1" />
+                                        <div className="text-xs">Complete previous module</div>
+                                      </div>
+                                    ) : isCompleted ? (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                      >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Review
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        size="sm"
+                                        className={`transition-all shadow-lg ${
+                                          isNext 
+                                            ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                                            : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600'
+                                        }`}
+                                      >
+                                        {isNext ? (
+                                          <>
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            Start Now
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Play className="w-4 h-4 mr-2" />
+                                            Continue
+                                          </>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Path Completion Celebration */}
+                  {getPathProgress(currentPath) === 100 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-8 p-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl shadow-xl"
+                    >
+                      <div className="text-center">
+                        <motion.div
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                          className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+                        >
+                          <Trophy className="w-8 h-8 text-white" />
+                        </motion.div>
+                        <h3 className="text-2xl font-bold mb-2">🎉 Learning Path Completed!</h3>
+                        <p className="text-white/90 mb-4">
+                          Congratulations! You've successfully completed all modules in this learning path.
+                        </p>
+                        <div className="flex gap-3 justify-center">
+                          <Button
+                            variant="outline"
+                            className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Certificate
+                          </Button>
+                          <Button
+                            className="bg-white text-emerald-600 hover:bg-white/90"
+                            onClick={() => setSelectedPath(null)}
+                          >
+                            <ChevronRight className="w-4 h-4 mr-2" />
+                            Explore More Paths
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </Card>
 
                 {/* Additional Career Info dari API */}
@@ -704,12 +954,14 @@ export default function LearningPathPage() {
           </div>
         </div>
 
+        {/* Enhanced Module Modal */}
         {selectedModule && (
           <LearningModuleModal
             isOpen={showModuleModal}
             onClose={() => setShowModuleModal(false)}
             module={selectedModule}
             onComplete={handleModuleComplete}
+            pathColor={currentPath.color}
           />
         )}
       </AuthGuard>
